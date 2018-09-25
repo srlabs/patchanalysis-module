@@ -364,7 +364,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     }
 
 
-    private void restoreState(){
+    private synchronized void restoreState(){
         NotificationHelper.cancelNonStickyNotifications(this);
         ActivityState tempNonPersistentState = nonPersistentState;
         try {
@@ -380,7 +380,6 @@ public class PatchanalysisMainActivity extends FragmentActivity {
             } else {
                 // Analysis is not running
                 resultChart.setAnalysisRunning(false);
-                setButtonStartAnalysis();
                 progressBox.setVisibility(View.GONE);
                 if (SharedPrefsHelper.getAnalysisResult(this) == null) {
                     // No analysis result available
@@ -399,10 +398,16 @@ public class PatchanalysisMainActivity extends FragmentActivity {
 
                 } else {
                     // Previous analysis result available, show results table
-                    resultChart.setVisibility(View.VISIBLE);
+                    resultChart.loadValuesFromCachedResult(this);
+                    if (resultChart.hasCountedCategories()) {
+                        // Counted categories available, show bar chart
+                        resultChart.setVisibility(View.VISIBLE);
+                        resultChart.invalidate();
+                    }
                     webViewContent.setVisibility(View.VISIBLE);
                     showPatchlevelDateNoTable();//should also update the cutline info
                 }
+                setButtonStartAnalysis();
             }
         } catch (RemoteException e) {
             Log.d(Constants.LOG_TAG,"RemoteException in restoreState" , e);
@@ -504,7 +509,6 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         Log.i(Constants.LOG_TAG, "refPatchlevelDate=" + refPatchlevelDate);
         Log.i(Constants.LOG_TAG, "showPatchlevelDateNoTable()");
         webViewContent.removeAllViews();
-        resultChart.resetCounts();
         //Log.i(Constants.LOG_TAG, "showPatchlevelDateNoTable(): w=" + webViewContent.getWidth() + "  h=" + webViewContent.getHeight() + "  innerW=" + webViewContent.getChildAt(0).getWidth() + "  innerH=" + webViewContent.getChildAt(0).getHeight());
         try{
             JSONObject testResults = SharedPrefsHelper.getAnalysisResult(this);
@@ -552,7 +556,6 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                 JSONArray vulnerabilitiesForCategory = testResults.getJSONArray(category);
 
                 Vector<Integer> statusColors = new Vector<Integer>();
-                int numPatched = 0, numMissing = 0, numInconclusive = 0, numNotAffected = 0, numNotClaimed = 0;
 
                 for (int i = 0; i < vulnerabilitiesForCategory.length(); i++) {
                     JSONObject vulnerability = vulnerabilitiesForCategory.getJSONObject(i);
@@ -563,31 +566,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                         continue;
 
                     statusColors.add(color);
-                    switch(color){
-                        case Constants.COLOR_PATCHED:
-                            numPatched++;
-                            break;
-                        case Constants.COLOR_INCONCLUSIVE:
-                            numInconclusive++;
-                            break;
-                        case Constants.COLOR_MISSING:
-                            numMissing++;
-                            break;
-                        case Constants.COLOR_NOTAFFECTED:
-                            numNotAffected++;
-                            break;
-                        case Constants.COLOR_NOTCLAIMED:
-                            numNotClaimed++;
-                            break;
-                    }
                 }
-
-                //set result chart
-                resultChart.increasePatched(numPatched);
-                resultChart.increaseInconclusive(numInconclusive);
-                resultChart.increaseMissing(numMissing);
-                resultChart.increaseNotAffected(numNotAffected);
-                resultChart.increaseNotClaimed(numNotClaimed);
 
                 int[] tmp = new int[statusColors.size()];
                 for (int i = 0; i < statusColors.size(); i++) {
@@ -608,11 +587,9 @@ public class PatchanalysisMainActivity extends FragmentActivity {
             nonPersistentState = ActivityState.PATCHLEVEL_DATES;
 
             if(noCVETestsForApiLevelMessage != null){
-                showNoCVETestsForApiLevelDialog(noCVETestsForApiLevelMessage);
+                metaInfo += getNoCVETestsForApiLevelExtraMetaInfo(noCVETestsForApiLevelMessage);
             }
-
-            resultChart.invalidate();
-            resultChart.setVisibility(View.VISIBLE);
+            showMetaInformation(metaInfo,null);
             progressBox.setVisibility(View.GONE);
 
             //update counts in cutline
@@ -740,14 +717,13 @@ public class PatchanalysisMainActivity extends FragmentActivity {
             noInternetDialogShowing = true;
         }
     }
-    private void showNoCVETestsForApiLevelDialog(String message){
-        String refPatchlevelDate = TestUtils.getPatchlevelDate();
+
+    private String getNoCVETestsForApiLevelExtraMetaInfo(String message){
         StringBuilder information = new StringBuilder();
-        information.append(this.getResources().getString(R.string.patchanalysis_claimed_patchlevel_date)+": <b>" + refPatchlevelDate +"</b></br>");
-        information.append("<b><u>"+this.getResources().getString(R.string.patchanalysis_dialog_note_title)+"</u></b></br>");
+        information.append("</br><b><u>"+this.getResources().getString(R.string.patchanalysis_dialog_note_title)+"</u></b></br>");
         information.append(message+"</br>");
         information.append("Android OS version: "+ Build.VERSION.RELEASE);
-        showMetaInformation(information.toString(),null);
+        return information.toString();
     }
 
     @Override
@@ -878,6 +854,5 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     public int getProgressBoxId() {
         return R.id.progress_box;
     }
-
 
 }

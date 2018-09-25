@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 28
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
 
@@ -24,14 +24,23 @@ android {
         abortOnError false
     }
 
+    flavorDimensions "certifiedBuildCheck"
+    productFlavors {
+        safetynet {
+            dimension "certifiedBuildCheck"
+        }
+        nobuildcheck {
+            dimension "certifiedBuildCheck"
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:25.2.0'
-    implementation 'com.google.android.gms:play-services-safetynet:11.0.0'
-    implementation 'io.jsonwebtoken:jjwt:0.7.0'
+    safetynetImplementation 'com.google.android.gms:play-services-safetynet:11.0.0'
+    safetynetImplementation 'io.jsonwebtoken:jjwt:0.7.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 }

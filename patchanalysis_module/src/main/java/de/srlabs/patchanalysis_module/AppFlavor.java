@@ -11,7 +11,17 @@ import android.view.MenuItem;
  */
 public abstract class AppFlavor {
 
+    public static String BINARIES_PATH;
+
     private static AppFlavor activeFlavor;
+
+    public AppFlavor(Context context) {
+        this.BINARIES_PATH = context.getApplicationInfo().dataDir + "/lib/";
+    }
+
+    public String getBinaryPath() {
+        return BINARIES_PATH;
+    }
 
     public static AppFlavor getAppFlavor() {
         return activeFlavor;
@@ -20,8 +30,6 @@ public abstract class AppFlavor {
     public static void setAppFlavor(AppFlavor appFlavor) {
         activeFlavor = appFlavor;
     }
-
-    public abstract String getBinaryPath();
 
     public abstract String setAppId(Context context);
 

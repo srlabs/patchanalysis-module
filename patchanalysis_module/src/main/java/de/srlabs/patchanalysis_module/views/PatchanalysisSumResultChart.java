@@ -17,8 +17,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import de.srlabs.patchanalysis_module.AppFlavor;
 import de.srlabs.patchanalysis_module.Constants;
@@ -52,6 +55,8 @@ public class PatchanalysisSumResultChart extends View {
 
     private static final Result[] drawOrder = {Result.PATCHED, Result.MISSING, Result.NOTCLAIMED, Result.INCONCLUSIVE, Result.NOTAFFECTED};
 
+    private static final Set<String> categoriesToExcludeFromCount = new HashSet<>(Arrays.asList("other"));
+
     public PatchanalysisSumResultChart(Context context, AttributeSet attrs) {
         super(context, attrs);
         float itemHeight = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, getResources().getDisplayMetrics());
@@ -79,6 +84,15 @@ public class PatchanalysisSumResultChart extends View {
         parts.put(Result.NOTCLAIMED, new ResultPart(0, Constants.COLOR_NOTCLAIMED));
     }
 
+    public static boolean hasCountedCategories() {
+        for (Result resultType : parts.keySet()) {
+            ResultPart part = parts.get(resultType);
+            if (part != null && part.getCount() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static void setAnalysisRunning(boolean running){
         isAnalysisRunning = running;
@@ -184,11 +198,11 @@ public class PatchanalysisSumResultChart extends View {
         String text = null;
         if(TestUtils.isTooOldAndroidAPIVersion()){
             text = getResources().getString(R.string.patchanalysis_too_old_android_api_level_result_chart);
-        }
-        else if(isAnalysisRunning){
+        } else if(isAnalysisRunning){
             text = getResources().getString(R.string.patchanalysis_analysis_in_progress);
-        }
-        else {
+        } else if (SharedPrefsHelper.getAnalysisResult(getContext()) != null) {
+            text = getResources().getString(R.string.patchanalysis_only_general_result);
+        } else {
             text = getResources().getString(R.string.patchanalysis_no_test_result);
         }
 
@@ -346,28 +360,29 @@ public class PatchanalysisSumResultChart extends View {
             Iterator<String> categoryIterator = analysisResult.keys();
             while (categoryIterator.hasNext()) {
                 String category = categoryIterator.next();
-                JSONArray vulnerabilities = analysisResult.getJSONArray(category);
-                // category "other", or a patch date that should be covered
-                for (int i = 0; i < vulnerabilities.length(); i++) {
-                    JSONObject vulnerability = vulnerabilities.getJSONObject(i);
+                if (!categoriesToExcludeFromCount.contains(category)) { // do not include e.g. category 'other' in sums
+                    JSONArray vulnerabilities = analysisResult.getJSONArray(category);
+                    for (int i = 0; i < vulnerabilities.length(); i++) {
+                        JSONObject vulnerability = vulnerabilities.getJSONObject(i);
 
-                    int color = Constants.getVulnerabilityIndicatorColor(vulnerability, category);
-                    switch(color) {
-                        case Constants.COLOR_PATCHED:
-                            numPatched++;
-                            break;
-                        case Constants.COLOR_INCONCLUSIVE:
-                            numInconclusive++;
-                            break;
-                        case Constants.COLOR_MISSING:
-                            numMissing++;
-                            break;
-                        case Constants.COLOR_NOTAFFECTED:
-                            numNotAffected++;
-                            break;
-                        case Constants.COLOR_NOTCLAIMED:
-                            numNotClaimed++;
-                            break;
+                        int color = Constants.getVulnerabilityIndicatorColor(vulnerability, category);
+                        switch(color) {
+                            case Constants.COLOR_PATCHED:
+                                numPatched++;
+                                break;
+                            case Constants.COLOR_INCONCLUSIVE:
+                                numInconclusive++;
+                                break;
+                            case Constants.COLOR_MISSING:
+                                numMissing++;
+                                break;
+                            case Constants.COLOR_NOTAFFECTED:
+                                numNotAffected++;
+                                break;
+                            case Constants.COLOR_NOTCLAIMED:
+                                numNotClaimed++;
+                                break;
+                        }
                     }
                 }
             }

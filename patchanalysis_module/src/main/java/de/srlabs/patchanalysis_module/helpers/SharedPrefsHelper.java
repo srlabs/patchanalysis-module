@@ -160,7 +160,7 @@ public class SharedPrefsHelper {
         return isBuildFromLastAnalysisCertified;
     }
 
-    public static JSONObject getAnalysisResult(ContextWrapper context) {
+    public static JSONObject getAnalysisResult(Context context) {
         if (cachedResultJSON != null) {
             return cachedResultJSON;
         }

@@ -22,6 +22,7 @@
 
     <!-- Colored summary result chart -->
     <string name="patchanalysis_no_test_result">Click here to test patch level</string>
+    <string name="patchanalysis_only_general_result">Click here to see general test results</string>
     <string name="patchanalysis_sum_result_chart_analysis_in_progress">Analysis in progress...</string>
 
     <!-- Colored summary result chart legend -->

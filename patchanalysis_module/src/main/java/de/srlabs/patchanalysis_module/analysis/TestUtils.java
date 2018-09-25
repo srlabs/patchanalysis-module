@@ -708,8 +708,15 @@ public class TestUtils {
             progressItem.update(0.7);
             Log.i(Constants.LOG_TAG,"Reading all manifests...");
             JSONObject manifests = readAllManifests(context);
-            devinfo.put("manifests", manifests.getJSONObject("manifests"));
-            devinfo.put("manifestCookies", manifests.getJSONObject("manifestCookies"));
+
+            if (manifests != null) {
+                devinfo.put("manifests", manifests.getJSONObject("manifests"));
+                devinfo.put("manifestCookies", manifests.getJSONObject("manifestCookies"));
+            } else {
+                devinfo.put("manifests", null);
+                devinfo.put("manifestCookies", null);
+            }
+
             progressItem.update(1.0); // Final 30% progress for Android manifests of system applications
             Log.i(Constants.LOG_TAG,"Finished reading all manifests.");
             return devinfo;
