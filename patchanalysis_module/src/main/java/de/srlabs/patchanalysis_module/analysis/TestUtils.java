@@ -148,6 +148,8 @@ public class TestUtils {
                         }
                     } catch(InvocationTargetException e){
                         break;
+                    } catch(IOException e){
+                        Log.e(Constants.LOG_TAG,"Could not parse manifest file for apk file: "+apkFile, e);
                     }
                 }
             }

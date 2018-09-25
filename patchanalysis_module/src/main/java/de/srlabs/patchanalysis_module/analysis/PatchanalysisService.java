@@ -29,6 +29,7 @@ import de.srlabs.patchanalysis_module.Constants;
 import de.srlabs.patchanalysis_module.ITestExecutorCallbacks;
 import de.srlabs.patchanalysis_module.ITestExecutorDashboardCallbacks;
 import de.srlabs.patchanalysis_module.ITestExecutorServiceInterface;
+import de.srlabs.patchanalysis_module.R;
 import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.helpers.database.PADatabaseManager;
 import de.srlabs.patchanalysis_module.helpers.database.PASQLiteOpenHelper;
@@ -156,8 +157,8 @@ public class PatchanalysisService extends Service {
             boolean outdated = minAppVersion > Constants.APP_VERSION;
             if(outdated){
                 Log.i(Constants.LOG_TAG, "Outdated app version! minAppVersion=" + minAppVersion);
-                String errorMessage = "<p style=\"font-weight:bold;\">"+getString(PatchanalysisService.this,"patchanalysis_new_version_available_heading")
-                        +"</p>"+ getString(PatchanalysisService.this, "patchanalysis_new_version_available_instructions");
+                String errorMessage = "<p style=\"font-weight:bold;\">"+PatchanalysisService.this.getResources().getString(R.string.patchanalysis_new_version_available_heading)
+                        +"</p>"+ PatchanalysisService.this.getResources().getString(R.string.patchanalysis_new_version_available_instructions);
                 handleFatalErrorViaCallback(errorMessage);
             }
             return outdated;
@@ -208,7 +209,7 @@ public class PatchanalysisService extends Service {
                 vulnerabilities = testSuite.getVulnerabilities();
             } catch(IOException e){
                 Log.e(Constants.LOG_TAG, "Exception in evaluateVulnerabilitiesTests", e);
-                handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                 return e.toString();
             }
             Iterator<String> identifierIterator = vulnerabilities.keys();
@@ -265,7 +266,7 @@ public class PatchanalysisService extends Service {
 
         } catch (Exception e) {
             Log.e(Constants.LOG_TAG, "Exception in evaluateVulnerabilitiesTests", e);
-            handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_error_creating_result_overview"));
+            handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_error_creating_result_overview));
             return e.toString();
         }
     }
@@ -345,7 +346,7 @@ public class PatchanalysisService extends Service {
                     if(uploadTestResults){
                         apiRunning = true;
                         if(!isConnectedToInternet()){
-                            handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                            handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                             return;
                         }
                         Log.i(Constants.LOG_TAG,"Reporting test results to server...");
@@ -357,17 +358,17 @@ public class PatchanalysisService extends Service {
                     }
                 } catch(IOException | IllegalStateException e){
                     reportError(NO_INTERNET_CONNECTION_ERROR);
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                     Log.e(Constants.LOG_TAG, "Exception in pendingTestResultsUploadRunnable", e);
                     apiRunning = false;
                 } catch( JSONException e){
                     reportError(NO_INTERNET_CONNECTION_ERROR);
                     Log.e(Constants.LOG_TAG,"JSONException in pendingTestResultsUploadRunnable: "+e.getMessage());
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                     apiRunning = false;
                 } catch(OutOfMemoryError e) {
                     Log.e(Constants.LOG_TAG,"OutOfMemoryError in pendingTestResultsUploadRunnable: "+e.getMessage());
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_error_out_of_memory"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_error_out_of_memory));
                 }
             }
         };
@@ -381,7 +382,7 @@ public class PatchanalysisService extends Service {
                         apiRunning = true;
                         if (deviceInfoJson != null) {
                             if(!isConnectedToInternet()){
-                                handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                                handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                                 return;
                             }
                             api.reportSys(deviceInfoJson, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
@@ -394,7 +395,7 @@ public class PatchanalysisService extends Service {
                 } catch(IllegalStateException | IOException e){
                     reportError(NO_INTERNET_CONNECTION_ERROR);
                     Log.e(Constants.LOG_TAG, "Exception in pendingDeviceInfoUploadRunnable()", e);
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                     apiRunning = false;
                 }
             }
@@ -637,7 +638,7 @@ public class PatchanalysisService extends Service {
                 Log.i(Constants.LOG_TAG, "Starting to download testsuite");
                 apiRunning = true;
                 if(!isConnectedToInternet()){
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                     return;
                 }
                 downloadingTestSuite = true;
@@ -656,7 +657,7 @@ public class PatchanalysisService extends Service {
             } catch (IllegalStateException | IOException e) {
                 Log.e(Constants.LOG_TAG, "Exception in DownloadThread", e);
                 reportError(NO_INTERNET_CONNECTION_ERROR);
-                handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                 return;
             } finally{
                 apiRunning = false;
@@ -703,7 +704,7 @@ public class PatchanalysisService extends Service {
             Vector<ProgressItem> requestProgress = new Vector<>();
             try {
                 if(!isConnectedToInternet()){
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                     return;
                 }
                 JSONArray requestsJson = api.getRequests(getAppId(), Build.VERSION.SDK_INT, TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(), TestUtils.getBuildDateUtc(), Constants.APP_VERSION);
@@ -722,7 +723,7 @@ public class PatchanalysisService extends Service {
                         TestUtils.validateFilename(filename);
                         Log.d(Constants.LOG_TAG,"Uploading file: "+filename);
                         if(!isConnectedToInternet()){
-                            handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                            handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                             return;
                         }
                         api.reportFile(filename, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(), TestUtils.getBuildDateUtc(),
@@ -740,7 +741,7 @@ public class PatchanalysisService extends Service {
                 Log.e(Constants.LOG_TAG, "RequestsThread.run() exception", e);
                 if(e instanceof IOException || e instanceof IllegalStateException) {
                     reportError(NO_INTERNET_CONNECTION_ERROR);
-                    handleFatalErrorViaCallback(getString(PatchanalysisService.this, "patchanalysis_dialog_no_internet_connection_text"));
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                 }
                 downloadRequestsProgress.update(1.0);
                 for(ProgressItem x:requestProgress){
@@ -805,16 +806,13 @@ public class PatchanalysisService extends Service {
         JSONObject info = TestUtils.makeDeviceinfoJson(APP_FLAVOR, service, progressItem);
         // TODO: Move this into TestUtils.makeDeviceinfoJson
         try {
-            info.put("safetyNetApiNonce", CertifiedBuildChecker.getInstance().getNonceBase64());
-            info.put("safetyNetApiResponse", CertifiedBuildChecker.getInstance().getResult());
+            if (info != null) {
+                info.put("safetyNetApiNonce", CertifiedBuildChecker.getInstance().getNonceBase64());
+                info.put("safetyNetApiResponse", CertifiedBuildChecker.getInstance().getResult());
+            }
         } catch (JSONException e) {
             Log.e(Constants.LOG_TAG, "Failed to add SafetyNet API result to device info", e);
         }
         return info;
     }
-
-    private static String getString(Context activity, String key) {
-        return (String) activity.getResources().getString(activity.getResources().getIdentifier(key, "string", "de.srlabs.patchanalysis_module"));
-    }
-
 }
