@@ -25,6 +25,7 @@ import java.util.zip.ZipFile;
 
 import de.srlabs.patchanalysis_module.AppFlavor;
 import de.srlabs.patchanalysis_module.Constants;
+import de.srlabs.patchanalysis_module.analysis.java_basic_tests.BuildPropertyTest;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 import de.srlabs.patchanalysis_module.analysis.java_basic_tests.AslrTest;
 import de.srlabs.patchanalysis_module.analysis.java_basic_tests.JavaBasicTest;
@@ -273,6 +274,13 @@ public class TestEngine {
                 return runDisasFunctionMatchesRegexTest(test, null);
             case "MASK_SIGNATURE_SYMBOL":
                 return runMaskSignatureTest(test, null);
+            case "BUILD_PROP_EQUALS": {
+                String buildProperty = test.getString("buildProperty");
+                String expectedValue = test.getString("value");
+
+                BuildPropertyTest buildPropertyTest = new BuildPropertyTest(buildProperty, expectedValue);
+                return buildPropertyTest.runTest(context);
+            }
             case "JAVA_TEST":
                 String testClassName = test.getString("testClassName");
                 // Make sure that the class name only contains valid characters

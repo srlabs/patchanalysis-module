@@ -103,8 +103,8 @@ public class TestUtils {
             JSONObject cookies = new JSONObject();
             JSONObject manifests = new JSONObject();
             HashSet<String> done = new HashSet<>();
+
             // https://github.com/michalbednarski/IntentsLab/blob/master/IntentsLab/src/main/java/com/github/michalbednarski/intentslab/XmlViewerFragment.java
-            final Method getCookieName = AssetManager.class.getDeclaredMethod("getCookieName", int.class);
             PackageManager pm = context.getPackageManager();
             List<PackageInfo> pilist = pm.getInstalledPackages(0);
             for (PackageInfo pi : pilist) {
@@ -112,47 +112,34 @@ public class TestUtils {
                     continue; // Ignore non-system applications
                 }
                 String apkFile = pi.applicationInfo.sourceDir;
-                if(cookies.has(apkFile)){
-                    throw new JSONException("readAllManifests: cookies already has '"+apkFile+"' field");
-                }
-                JSONArray cookielist = new JSONArray();
                 Resources r = pm.getResourcesForApplication(pi.applicationInfo);
                 AssetManager assets = r.getAssets();
-                for (int cookie = 1; cookie < 10; cookie++) {
-                    try{
-                        String cookieName = getCookieName.invoke(assets, cookie).toString();
-                        cookielist.put(cookieName);
-                    } catch(InvocationTargetException e){
-                        break;
+
+                if (Build.VERSION.SDK_INT < 28) { //only for Android versions smaller than 9, as reflection for non-SDK methods is not possible anymore + "getCookieName" method was removed
+                    if (cookies.has(apkFile)) {
+                        throw new JSONException("readAllManifests: cookies already has '" + apkFile + "' field");
                     }
+                    JSONArray cookielist = new JSONArray();
+                    for (int cookie = 1; cookie < 10; cookie++) {
+                        try {
+                            String cookieName = getCookie(assets, cookie);
+                            cookielist.put(cookieName);
+                            if (!manifests.has(cookieName)) {
+                                XmlResourceParser xml = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
+                                manifests.put(cookieName, readManifest(xml));
+                            }
+                        } catch (InvocationTargetException e) {
+                            break;
+                        } catch (IOException e) {
+                            Log.e(Constants.LOG_TAG, "Could not parse manifest file for apk file: " + apkFile, e);
+                        }
+                    }
+                    cookies.put(apkFile, cookielist);
                 }
-                cookies.put(apkFile, cookielist);
                 XmlResourceParser xml = assets.openXmlResourceParser(0, "AndroidManifest.xml");
                 manifests.put(apkFile, readManifest(xml));
             }
-            for (PackageInfo pi : pilist) {
-                if ((pi.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-                    continue; // Ignore non-system applications
-                }
-                String apkFile = pi.applicationInfo.sourceDir;
-                JSONArray cookielist = new JSONArray();
-                Resources r = pm.getResourcesForApplication(pi.applicationInfo);
-                AssetManager assets = r.getAssets();
-                JSONObject apkManifests = new JSONObject();
-                for (int cookie = 1; cookie < 10; cookie++) {
-                    try{
-                        String cookieName = getCookieName.invoke(assets, cookie).toString();
-                        if(!manifests.has(cookieName)){
-                            XmlResourceParser xml = assets.openXmlResourceParser(cookie, "AndroidManifest.xml");
-                            manifests.put(cookieName, readManifest(xml));
-                        }
-                    } catch(InvocationTargetException e){
-                        break;
-                    } catch(IOException e){
-                        Log.e(Constants.LOG_TAG,"Could not parse manifest file for apk file: "+apkFile, e);
-                    }
-                }
-            }
+
             result.put("manifestCookies", cookies);
             result.put("manifests", manifests);
             return result;
@@ -161,6 +148,12 @@ public class TestUtils {
             return null;
         }
     }
+
+    private static String getCookie(AssetManager assetManager, int cookie) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException{
+        final Method getCookieName = AssetManager.class.getDeclaredMethod("getCookieName", int.class);
+        return getCookieName.invoke(assetManager, cookie).toString();
+    }
+
     private static JSONArray getProtectedBroadcasts(Context context) throws JSONException {
         // TODO: Reimplement this based on manifest json
         if(protectedBroadcasts == null) {
