@@ -1,0 +1,6 @@
+[submodule "contrib/busybox"]
+	path = contrib/busybox
+	url = https://github.com/mirror/busybox.git
+[submodule "contrib/binutils-gdb"]
+	path = contrib/binutils-gdb
+	url = git://sourceware.org/git/binutils-gdb.git

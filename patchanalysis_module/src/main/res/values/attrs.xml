@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Patchanalysis result overview chart -->
+    <declare-styleable name="PatchanalysisSumResultChart">
+        <attr name="small" format="boolean" />
+        <attr name="shownumbers" format="boolean" />
+        <attr name="drawborder" format="boolean" />
+    </declare-styleable>
+</resources>

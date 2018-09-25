@@ -1,0 +1,3 @@
+binutils-gdb/*
+busybox/*
+builds/*.compile_log
