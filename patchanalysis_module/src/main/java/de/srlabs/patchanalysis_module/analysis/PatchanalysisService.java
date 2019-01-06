@@ -57,6 +57,7 @@ public class PatchanalysisService extends Service {
     private boolean isAnalysisRunning = false;
     private long currentAnalysisTimestamp;
     public static AppFlavor APP_FLAVOR;
+    private long timeBeforeTesting;
 
     @Override
     public void onCreate() {
@@ -170,7 +171,7 @@ public class PatchanalysisService extends Service {
     private final ITestExecutorServiceInterface.Stub mBinder = new ITestExecutorServiceInterface.Stub() {
         @Override
         public void updateCallback(final ITestExecutorCallbacks callback){
-            Log.d(Constants.LOG_TAG,"Updating callbacks.");
+            //Log.d(Constants.LOG_TAG,"Updating callbacks.");
             PatchanalysisService.patchanalysisMainActivityCallback = callback;
             if (isAnalysisRunning) {
                 updateProgress();
@@ -179,7 +180,7 @@ public class PatchanalysisService extends Service {
 
         @Override
         public void updateDashboardCallback(final ITestExecutorDashboardCallbacks callback){
-            Log.d(Constants.LOG_TAG,"Updating callbacks.");
+            //Log.d(Constants.LOG_TAG,"Updating callbacks.");
             PatchanalysisService.dashboardActivityCallback = callback;
         }
 
@@ -245,7 +246,7 @@ public class PatchanalysisService extends Service {
                 vulnerabilityResult.put("title", vulnerability.getString("title"));
                 vulnerabilityResult.put("notAffected", notAffected);
 
-                if (!notAffected) {
+                if (notAffected == null || !notAffected) {
                     JSONObject testVulnerable = vulnerability.getJSONObject("testVulnerable");
                     Boolean vulnerable = TestEngine.runTest(basicTestCache, testVulnerable);
                     vulnerabilityResult.put("vulnerable", vulnerable);
@@ -421,6 +422,7 @@ public class PatchanalysisService extends Service {
         } else{
             if(evaluateTests){
                 Log.i(Constants.LOG_TAG, "Calling basicTestCache.startTesting()");
+                timeBeforeTesting = System.currentTimeMillis();
                 basicTestCache.startTesting(basicTestsProgress, pendingTestResultsUploadRunnable);
             }
         }
@@ -440,7 +442,8 @@ public class PatchanalysisService extends Service {
     }
 
     public void finishedBasicTests(){
-        Log.i(Constants.LOG_TAG,"Finished performing basic tests.");
+        Log.i(Constants.LOG_TAG,"Finished performing basic tests in "+(int)((System.currentTimeMillis()-timeBeforeTesting)/1000)+" s");
+        timeBeforeTesting = 0;
         //vulnerabilitiesJSONResult = getJSONFromVulnerabilitiesResults();
     }
 
@@ -449,7 +452,7 @@ public class PatchanalysisService extends Service {
     }
 
     private ProgressItem addProgressItem(String name, double weight){
-        Log.d(Constants.LOG_TAG,"Adding progressItem: "+name+" weight:"+weight);
+        //Log.d(Constants.LOG_TAG,"Adding progressItem: "+name+" weight:"+weight);
         ProgressItem item = new ProgressItem(this, name, weight);
         progressItems.add(item);
         return item;
@@ -665,6 +668,7 @@ public class PatchanalysisService extends Service {
             Log.i(Constants.LOG_TAG, "Calling basicTestCache.startTesting()");
             if(evaluateTests) {
                 basicTestsRunning = true;
+                timeBeforeTesting = System.currentTimeMillis();
                 basicTestCache.startTesting(basicTestsProgress, pendingTestResultsUploadRunnable);
             }
         }
@@ -711,7 +715,7 @@ public class PatchanalysisService extends Service {
                 downloadRequestsProgress.update(1.0);
                 Log.i(Constants.LOG_TAG,"Downloading requests finished...");
                 for(int i=0;i<requestsJson.length();i++){
-                    Log.i(Constants.LOG_TAG, "Adding progress item for request " + i);
+                    //Log.i(Constants.LOG_TAG, "Adding progress item for request " + i);
                     requestProgress.add(addProgressItem("Request_" + i, 1.0));
                 }
                 updateProgress();
@@ -721,7 +725,7 @@ public class PatchanalysisService extends Service {
                     if(requestType.equals("UPLOAD_FILE")){
                         String filename = request.getString("filename");
                         TestUtils.validateFilename(filename);
-                        Log.d(Constants.LOG_TAG,"Uploading file: "+filename);
+                        //Log.d(Constants.LOG_TAG,"Uploading file: "+filename);
                         if(!isConnectedToInternet()){
                             handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                             return;
@@ -804,7 +808,6 @@ public class PatchanalysisService extends Service {
 
     private JSONObject makeDeviceinfoJson(Service service, ProgressItem progressItem) {
         JSONObject info = TestUtils.makeDeviceinfoJson(APP_FLAVOR, service, progressItem);
-        // TODO: Move this into TestUtils.makeDeviceinfoJson
         try {
             if (info != null) {
                 info.put("safetyNetApiNonce", CertifiedBuildChecker.getInstance().getNonceBase64());

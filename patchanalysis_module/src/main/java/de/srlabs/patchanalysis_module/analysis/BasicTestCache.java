@@ -10,7 +10,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -309,21 +311,50 @@ public class BasicTestCache {
             while(true){
                 try {
                     TestBundle bundle = tasks.take();
+                    Set<JSONObject> rollingSignatureTests = null;
                     if(bundle.isStopMarker()) {
                         Log.d(Constants.LOG_TAG," shutting down worker thread..");
                         return;
                     }
-                    for(JSONObject basicTest : bundle.getBasicTests()){
-                        BasicTestResult result = performTest(bundle,basicTest);
-                        synchronized (results) {
-                            results.add(result);
+                    if(bundle.getFilename() != null){
+                        bundle.checkTargetFileExists();
+                    }
+                    for (JSONObject basicTest : bundle.getBasicTests()) {
+                        try {
+                            //collect all rolling signature tests
+                            if (basicTest.getString("testType") == "ROLLING_SIGNATURE") {
+                                if (rollingSignatureTests == null) {
+                                    rollingSignatureTests = new HashSet<>();
+                                }
+                                rollingSignatureTests.add(basicTest);
+                                continue;
+                            }
+
+                            BasicTestResult result = performTest(bundle, basicTest);
+                            synchronized (results) {
+                                results.add(result);
+                            }
+                        }catch (JSONException e){
+                            Log.e(Constants.LOG_TAG, "Basic test has no testType info:"+ basicTest);
                         }
                     }
+
+                    //execute all rolling signature test for the same file now
+                    if(rollingSignatureTests != null && rollingSignatureTests.size() > 0){
+                        Set<BasicTestResult> testResults = TestEngine.performCollectedRollingSignatureTests(bundle, rollingSignatureTests);
+                        for(BasicTestResult testResult : testResults){
+                            synchronized (results){
+                                results.add(testResult);
+                            }
+                        }
+                    }
+
                 }catch(InterruptedException e){
                     Log.d(Constants.LOG_TAG,"InterruptedException while dequeuing from tasks: "+e.getMessage());
                 }
             }
         }
+
 
         private BasicTestResult performTest(TestBundle bundle, JSONObject basicTest){
             try {
@@ -334,6 +365,21 @@ public class BasicTestCache {
 
                 try {
                     String testType = basicTest.getString("testType");
+                    if(bundle.getFilename() != null){
+                        String filepath = basicTest.getString("filename");
+                        //if target file is missing, skip all testing and return test specific result immediately
+                        if(!bundle.isTargetFileExisting()) {
+                            switch (testType) {
+                                case "FILE_EXISTS":
+                                    return new BasicTestResult(basicTest.getString("uuid"), false, null);
+                                case "FILE_CONTAINS_SUBSTRING":
+                                case "XZ_CONTAINS_SUBSTRING":
+                                    return new BasicTestResult(basicTest.getString("uuid"), null, null);
+                                default:
+                                    return new BasicTestResult(basicTest.getString("uuid"), null, "File does not exist: " + filepath);
+                            }
+                        }
+                    }
                     // all optimized tests here:
                     //      and all the information cached temporarily to aggregate test requirements and avoid e.g. redundant objdump calls
                     switch (testType) {

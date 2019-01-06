@@ -2,7 +2,10 @@ package de.srlabs.patchanalysis_module.analysis;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import de.srlabs.patchanalysis_module.analysis.signatures.SymbolInformation;
@@ -19,6 +22,7 @@ public class TestBundle {
     private HashMap<String, SymbolInformation> symbolTable = null;
     private String filename = null;
     private boolean isStopMarker = false;
+    private boolean targetFileExists = true;
 
     private TestBundle(){
         this.basicTests = new Vector<JSONObject>();
@@ -73,5 +77,16 @@ public class TestBundle {
 
     public void setObjdumpLines(Vector<String> objdumpLines) {
         this.objdumpLines = objdumpLines;
+    }
+
+    public void checkTargetFileExists(){
+        File targetFile = new File(filename);
+        if (!targetFile.exists()) {
+            targetFileExists = false;
+        }
+    }
+
+    public boolean isTargetFileExisting(){
+        return targetFileExists;
     }
 }

@@ -160,13 +160,13 @@ public class TestSuite {
 
 
                 for(String basicTestChunkURL : basicTestChunkURLs){
-                    Log.d(Constants.LOG_TAG,"Checking basic test chunk: "+basicTestChunkURL);
+                    //Log.d(Constants.LOG_TAG,"Checking basic test chunk: "+basicTestChunkURL);
                     //already in DB?
                     if(!database.wasBasicTestChunkSuccessful(basicTestChunkURL)) {
-                        Log.d(Constants.LOG_TAG,"Fetching basic test chunk :"+basicTestChunkURL);
+                        //Log.d(Constants.LOG_TAG,"Fetching basic test chunk :"+basicTestChunkURL);
                         try {
                             File chunkFile = api.downloadBasicTestChunk(context, basicTestChunkURL);
-                            Log.d(Constants.LOG_TAG,"Adding all basic tests from chunk: "+chunkFile.getAbsolutePath()+" to DB...");
+                            //Log.d(Constants.LOG_TAG,"Adding all basic tests from chunk: "+chunkFile.getAbsolutePath()+" to DB...");
                             addBasicTestsToDB(chunkFile);
                             database.markBasicTestChunkSuccessful(basicTestChunkURL);
                         } catch (IOException | IllegalStateException e) {
@@ -190,7 +190,7 @@ public class TestSuite {
             for (String vulnerabilityChunk : vulnerabilitesChunks) {
                 File chunkFile = api.getVulnerabilityChunkCacheFile(context, vulnerabilityChunk);
                 if (chunkFile == null) {
-                    Log.d(Constants.LOG_TAG, "Vulnerability chunk file missing: " + vulnerabilityChunk);
+                    //Log.d(Constants.LOG_TAG, "Vulnerability chunk file missing: " + vulnerabilityChunk);
                     try {
                         chunkFile = api.downloadVulnerabilityChunk(context, vulnerabilityChunk);
                     }catch(IOException | IllegalStateException e){

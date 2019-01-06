@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -520,13 +521,44 @@ public class TestEngine {
         return null;
     }
 
-    public static Set<SymbolInformation> runMultipleRollingSignatureTestsForSameFile(List<JSONObject> basicTests, String filename) throws IOException{
-        if(basicTests != null && basicTests.size() > 0){
-            MultiSignatureScanner scanner = new MultiSignatureScanner();
-            for(JSONObject test : basicTests){
-                scanner.addSignatureChecker(getRollingSignatureForTest(test));
+    public static Set<BasicTestResult> performCollectedRollingSignatureTests(TestBundle bundle, Set<JSONObject> rollingSignatureTests){
+        if(rollingSignatureTests != null){
+            Set<BasicTestResult> results = new HashSet<>();
+            try {
+                MultiSignatureScanner scanner = new MultiSignatureScanner();
+                for (JSONObject rollingSignatureBasicTest : rollingSignatureTests) {
+                    RollingSignature signature = getRollingSignatureForTest(rollingSignatureBasicTest);
+                    scanner.addSignatureChecker(signature);
+                }
+                Set<SymbolInformation> symbolInformationsResults = scanner.scanFile(bundle.getFilename());
+                Set<String> symbolNames = new HashSet<>();
+                for (SymbolInformation symbolInformation : symbolInformationsResults) {
+                    symbolNames.add(symbolInformation.getSymbolName());
+                }
+                for(JSONObject rollingSignatureBasicTest: rollingSignatureTests){
+                    boolean result = false;
+                    if(symbolNames.contains(rollingSignatureBasicTest.getString("rollingSignature"))){
+                        result = true;
+                    }
+
+                    results.add(new BasicTestResult(rollingSignatureBasicTest.getString("uuid"),result, null));
+
+                }
+            }catch(IOException e){
+                Log.e(Constants.LOG_TAG, "IOException while scanning file "+bundle.getFilename()+" for rolling signatures: "+e.getMessage());
+            }catch(JSONException e){
+                Log.e(Constants.LOG_TAG, "Missing info in basicTest while scanning for rolling signatures: "+e.getMessage());
+            }catch(IllegalStateException e){
+                //File does not exist -> all rollingsignature test are resulting in exception
+                for(JSONObject rollingSignatureBasicTest : rollingSignatureTests) {
+                    try{
+                        results.add(new BasicTestResult(rollingSignatureBasicTest.getString("uuid"), null, e.getMessage()));
+                    }catch(JSONException e1){
+                        Log.e(Constants.LOG_TAG,"Missing uuid info in basicTest: "+e1.getMessage());
+                    }
+                }
             }
-            return scanner.scanFile(filename);
+            return results;
         }
         return null;
     }
