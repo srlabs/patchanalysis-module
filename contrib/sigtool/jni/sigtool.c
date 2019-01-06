@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 	int argPos;
 	FILE* f;
 	char* buf;
-	uint32_t bytesRead;
+	uint32_t bytesRead, bufPosInFile;
 	if(argc < 3){
 		usage();
 	}
@@ -168,6 +168,7 @@ int main(int argc, char** argv){
 			exit(1);
 		}
 		buf = malloc(1024*1024);
+		bufPosInFile = 0;
 		while(1){
 			bytesRead = fread(buf, 1, 1024*1024, f);
 			if(bytesRead == 0){
@@ -185,7 +186,7 @@ int main(int argc, char** argv){
 						//printf("WANTED: a=0x%08x b=0x%08x\n", signatures.lists[j].signatures[k].a, signatures.lists[j].signatures[k].b);
 						if(signatures.lists[j].signatures[k].a == signatureCalculators[j].a && signatures.lists[j].signatures[k].b == signatureCalculators[j].b){
 							// fprintf(stderr, "Found match at 0x%08x siglen %d: a=0x%08x b=0x%08x\n", i + 4 - 4*signatureCalculators[j].signatureSize, 4*signatures.lists[j].signatureSize, signatureCalculators[j].a, signatureCalculators[j].b);
-							tmp[0] = i + 4 - 4*signatureCalculators[j].signatureSize;
+							tmp[0] = bufPosInFile + i + 4 - 4*signatureCalculators[j].signatureSize;
 							tmp[1] = 4*signatureCalculators[j].signatureSize;
 							tmp[2] = signatureCalculators[j].a;
 							tmp[3] = signatureCalculators[j].b;
@@ -196,6 +197,7 @@ int main(int argc, char** argv){
 					}
 				}
 			}
+			bufPosInFile += bytesRead;
 		}
 	} else if(strcmp(argv[2], "filter") == 0){
 		while(1){

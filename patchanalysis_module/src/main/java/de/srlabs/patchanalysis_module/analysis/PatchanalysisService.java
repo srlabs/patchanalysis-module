@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -58,6 +59,8 @@ public class PatchanalysisService extends Service {
     private long currentAnalysisTimestamp;
     public static AppFlavor APP_FLAVOR;
     private long timeBeforeTesting;
+    private int secondsNeededForTesting = 0;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
@@ -71,6 +74,9 @@ public class PatchanalysisService extends Service {
         APP_FLAVOR = AppFlavor.getAppFlavor();
 
         initDatabase();
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SnoopSnitch Patchanalysis");
     }
 
     private void initDatabase(){
@@ -245,6 +251,9 @@ public class PatchanalysisService extends Service {
                 vulnerabilityResult.put("identifier", identifier);
                 vulnerabilityResult.put("title", vulnerability.getString("title"));
                 vulnerabilityResult.put("notAffected", notAffected);
+                if(vulnerability.has("optional"))
+                    vulnerabilityResult.put("optional", vulnerability.getBoolean("optional"));
+
 
                 if (notAffected == null || !notAffected) {
                     JSONObject testVulnerable = vulnerability.getJSONObject("testVulnerable");
@@ -296,6 +305,9 @@ public class PatchanalysisService extends Service {
 
         clearProgress();
         updateProgress();
+
+        //acquire wake lock
+        wakeLock.acquire();
 
         final CertifiedBuildChecker certifiedBuildChecker = CertifiedBuildChecker.getInstance();
 
@@ -351,7 +363,9 @@ public class PatchanalysisService extends Service {
                             return;
                         }
                         Log.i(Constants.LOG_TAG,"Reporting test results to server...");
-                        api.reportTest(basicTestCache.toJson(), getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
+                        JSONObject results = basicTestCache.toJson();
+                        results.put("timeNeeded", secondsNeededForTesting);
+                        api.reportTest(results, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
                                 TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse());
                         Log.i(Constants.LOG_TAG,"Uploading test results finished...");
                         uploadTestResultsProgress.update(1.0);
@@ -423,6 +437,7 @@ public class PatchanalysisService extends Service {
             if(evaluateTests){
                 Log.i(Constants.LOG_TAG, "Calling basicTestCache.startTesting()");
                 timeBeforeTesting = System.currentTimeMillis();
+                secondsNeededForTesting = 0;
                 basicTestCache.startTesting(basicTestsProgress, pendingTestResultsUploadRunnable);
             }
         }
@@ -442,7 +457,8 @@ public class PatchanalysisService extends Service {
     }
 
     public void finishedBasicTests(){
-        Log.i(Constants.LOG_TAG,"Finished performing basic tests in "+(int)((System.currentTimeMillis()-timeBeforeTesting)/1000)+" s");
+        secondsNeededForTesting = (int)((System.currentTimeMillis()-timeBeforeTesting)/1000);
+        Log.i(Constants.LOG_TAG,"Finished performing basic tests in "+secondsNeededForTesting+" s");
         timeBeforeTesting = 0;
         //vulnerabilitiesJSONResult = getJSONFromVulnerabilitiesResults();
     }
@@ -495,6 +511,10 @@ public class PatchanalysisService extends Service {
     }
 
     private void onFinishedAnalysis() {
+
+        if(wakeLock.isHeld())
+            wakeLock.release();
+
         String analysisResultString = null;
         try {
             analysisResultString = evaluateVulnerabilitiesTests();
@@ -669,6 +689,7 @@ public class PatchanalysisService extends Service {
             if(evaluateTests) {
                 basicTestsRunning = true;
                 timeBeforeTesting = System.currentTimeMillis();
+                secondsNeededForTesting = 0;
                 basicTestCache.startTesting(basicTestsProgress, pendingTestResultsUploadRunnable);
             }
         }

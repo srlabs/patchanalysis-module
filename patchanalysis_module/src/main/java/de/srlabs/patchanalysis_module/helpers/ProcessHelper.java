@@ -86,11 +86,6 @@ public class ProcessHelper {
         String[] cmd = new String[params.length + 1];
         cmd[0] = OBJDUMP_PATH;
         System.arraycopy(params, 0, cmd, 1, params.length);
-        StringBuilder cmdStr = new StringBuilder();
-        for (String x : cmd) {
-            cmdStr.append(cmd).append(" ");
-        }
-        //Log.i(Constants.LOG_TAG, "runObjdumpCommand: " + cmdStr);
         return runCommand(cmd);
     }
 

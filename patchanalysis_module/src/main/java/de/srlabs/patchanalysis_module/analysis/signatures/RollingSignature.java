@@ -3,12 +3,12 @@ package de.srlabs.patchanalysis_module.analysis.signatures;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
-import java.math.BigInteger;
 import java.util.Arrays;
 import android.content.Context;
 import android.util.Log;
 
 import de.srlabs.patchanalysis_module.Constants;
+import de.srlabs.patchanalysis_module.analysis.TestUtils;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 
 /**
@@ -148,7 +148,7 @@ public class RollingSignature extends Signature {
 			String signatureData = parts[1] + parts[2];
 			this.checksumLen = (int) Math.pow(2, Integer.parseInt(signatureData.substring(0, 2), 16));
 			this.checksumOffset = Integer.parseInt(signatureData.substring(2, 8), 16); //Offset between the two (overlapping) checksums
-			byte[] sigsBin = new BigInteger(parts[2], 16).toByteArray();
+			byte[] sigsBin = TestUtils.hexStringToByteArray(parts[2]);
 			if (sigsBin.length != 16) {
 				throw new IllegalStateException("Malformated signatureString: sigsBin.length != 16");
 			}

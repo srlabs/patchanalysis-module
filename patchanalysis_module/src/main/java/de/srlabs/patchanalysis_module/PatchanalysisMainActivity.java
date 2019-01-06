@@ -74,13 +74,11 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     private boolean isServiceBound=false;
     private boolean noInternetDialogShowing = false;
     private String currentPatchlevelDate; // Only valid in ActivityState.VULNERABILITY_LIST
-    private boolean restoreStatePending = false;
     private String noCVETestsForApiLevelMessage = null;
     private static final int SDCARD_PERMISSION_RCODE = 1;
     private TestCallbacks callbacks = new TestCallbacks();
     private boolean isActivityActive = false;
 
-    private ActivityState lastActiveState = null;
     private ActivityState nonPersistentState = ActivityState.PATCHLEVEL_DATES;
 
 
@@ -565,6 +563,9 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                     if(!getShowInconclusivePatchAnalysisTestResults(this) && (color == Constants.COLOR_INCONCLUSIVE)) //only show inconclusive in PatchLevelDateOverviewChart if enabled in settings
                         continue;
 
+                    if(vulnerability.has("optional") && vulnerability.getBoolean("optional") && !getShowOptionalCVES(this))
+                        continue;
+
                     statusColors.add(color);
                 }
 
@@ -622,6 +623,9 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                 int resultColor = getVulnerabilityIndicatorColor(vulnerability, category);
 
                 if(!getShowInconclusivePatchAnalysisTestResults(this) && resultColor == Constants.COLOR_INCONCLUSIVE) // do not show and count inconclusive results, if disabled in settings
+                    continue;
+
+                if(vulnerability.has("optional") && vulnerability.getBoolean("optional") && !getShowOptionalCVES(this))
                     continue;
 
                 String identifier = vulnerability.getString("identifier");
@@ -802,6 +806,13 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         return AppFlavor.getAppFlavor().getShowInconclusivePatchAnalysisTestResults(context);
     }
 
+    /*private void setShowOptionalCVEs(Context context, boolean showOptionalCVEs) {
+        AppFlavor.getAppFlavor().setShowOptionalCVEs(context, showOptionalCVEs);
+    }*/
+
+    private boolean getShowOptionalCVES(Context context) {
+        return AppFlavor.getAppFlavor().getShowOptionalCVES(context);
+    }
 
     public int getShowInconclusiveMenuItemId() {
         return R.id.menu_action_pa_inconclusive;

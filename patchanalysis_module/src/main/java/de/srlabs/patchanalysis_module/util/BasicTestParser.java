@@ -223,6 +223,7 @@ public class BasicTestParser {
                             vuln.put(name, infoInt);
                             break;
                         case "testRequires64bit":
+                        case "optional":
                             Boolean bool = jsonReader.nextBoolean();
                             //Log.d(Constants.LOG_TAG,"2nd layer) Found boolean: "+name+" -> "+bool);
                             vuln.put(name,bool);
@@ -232,7 +233,10 @@ public class BasicTestParser {
                         case "testVulnerable":
                             vuln.put(name,parseSubTestInfo(jsonReader));
                             break;
-
+                        default: //ignore unknown fields
+                            jsonReader.skipValue();
+                            Log.d(Constants.LOG_TAG, "Found unknown vulnerability JSON field: "+name);
+                            break;
                     }
                     break;
             }
@@ -263,6 +267,10 @@ public class BasicTestParser {
                             break;
                         case "subtests":
                             subtests.put(name, parseSubTests(jsonReader));
+                            break;
+                        default: //ignore unknown fields
+                            jsonReader.skipValue();
+                            break;
                     }
             }
         }

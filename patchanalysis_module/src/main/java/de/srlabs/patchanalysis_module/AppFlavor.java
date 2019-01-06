@@ -37,6 +37,10 @@ public abstract class AppFlavor {
 
     public abstract boolean getShowInconclusivePatchAnalysisTestResults(Context context);
 
+    public abstract void setShowOptionalCVEs(Context context, boolean showOptionalCVEs);
+
+    public abstract boolean getShowOptionalCVES(Context context);
+
     public abstract String getPatchAnalysisNotificationSetting(Context context);
 
     public abstract Class<?> getMainActivityClass();
