@@ -58,4 +58,14 @@
     <string name="settings_patch_analysis_show_inconclusive_summary">Show inconclusive test results in the Patch analysis results</string>
     <string name="patchanalysis_menu_show_inconclusive">Show inconclusive results</string>
     <string name="patchanalysis_menu_show_inconclusive_short">inconclusive results</string>
+
+    <!-- Status messages -->
+    <string name="pa_status_start_fetching_test_chunks">Fetching testsuite details...</string>
+    <string name="pa_status_finished_parsing_testsuite">Finished parsing testsuite</string>
+    <string name="pa_status_downloading_testsuite">Downloading testsuite from server...</string>
+    <string name="pa_status_finished_downloading_testsuite">Finished downloading testsuite</string>
+    <string name="pa_status_collecting_device_info">Collecting device details...</string>
+    <string name="pa_status_finished_collecting_device_info">Finished collecting device details</string>
+    <string name="pa_status_finished_performing_basic_tests">Test execution complete</string>
+    <string name="pa_status_performing_basic_tests">"Executing tests...</string>
 </resources>

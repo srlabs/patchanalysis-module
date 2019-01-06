@@ -160,7 +160,7 @@ public class DBHelper {
     }
 
     public Vector<JSONObject> getNotPerformedTests(int limit){
-        Log.d(Constants.LOG_TAG,"getNotPerformedTests called with limit: "+limit);
+        //Log.d(Constants.LOG_TAG,"getNotPerformedTests called with limit: "+limit);
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
             db = PADatabaseManager.getInstance().openDatabase();
@@ -468,7 +468,7 @@ public class DBHelper {
         if(db == null || !db.isOpen()){
             db = PADatabaseManager.getInstance().openDatabase();
         }
-        Log.d(Constants.LOG_TAG,"Marking basicTestChunkURL: "+basicTestChunkURL+" as downloaded and parsed successfully in DB");
+        //Log.d(Constants.LOG_TAG,"Marking basicTestChunkURL: "+basicTestChunkURL+" as downloaded and parsed successfully in DB");
         ContentValues values = new ContentValues();
         //write to basictests table
         values.put("url",basicTestChunkURL);

@@ -550,6 +550,7 @@ public class TestEngine {
                 Log.e(Constants.LOG_TAG, "Missing info in basicTest while scanning for rolling signatures: "+e.getMessage());
             }catch(IllegalStateException e){
                 //File does not exist -> all rollingsignature test are resulting in exception
+                results = new HashSet<>();
                 for(JSONObject rollingSignatureBasicTest : rollingSignatureTests) {
                     try{
                         results.add(new BasicTestResult(rollingSignatureBasicTest.getString("uuid"), null, e.getMessage()));

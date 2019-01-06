@@ -14,7 +14,7 @@ import de.srlabs.patchanalysis_module.analysis.TestUtils;
 public class Constants  {
     public static final String LOG_TAG="PatchAnalysis";
 
-    public static final int APP_VERSION = 10;
+    public static final int APP_VERSION = 11;
     // needed so that subsequent calls to loaddata work on the same webview
     public static final String WEBVIEW_URL_LOADDATA = "arbitrary://invalid/url";
 

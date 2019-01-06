@@ -52,6 +52,7 @@ import java.util.regex.Pattern;
 
 import de.srlabs.patchanalysis_module.AppFlavor;
 import de.srlabs.patchanalysis_module.Constants;
+import de.srlabs.patchanalysis_module.R;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 import de.srlabs.patchanalysis_module.analysis.signatures.Section;
 import de.srlabs.patchanalysis_module.analysis.signatures.SymbolInformation;
@@ -705,17 +706,17 @@ public class TestUtils {
             devinfo.put("aslrTest1", readProcSelfMaps());
             devinfo.put("aslrTest2", readProcSelfMaps());
             devinfo.put("aslrTest3", readProcSelfMaps());
-            progressItem.update(0.1); // 10% progress for build properties and basic system info
+            progressItem.update(0.1, context.getResources().getString(R.string.pa_status_collecting_device_info)); // 10% progress for build properties and basic system info
             long filelistStartTime = System.currentTimeMillis();
             devinfo.put("systemPartition", DirectoryTreeLister.makeFilelist(new File("/system/"), new DirectoryTreeLister.ProgressCallback() {
                 @Override
                 public void reportProgress(double progress) {
-                    progressItem.update(0.1 + 0.6*progress); // 60% progress for filesystem listing/hashing
+                    progressItem.update(0.1 + 0.6*progress, null); // 60% progress for filesystem listing/hashing
                 }
             }));
             long filelistDuration = System.currentTimeMillis() - filelistStartTime;
             Log.i(Constants.LOG_TAG, "Generating filelist took " + filelistDuration + " ms");
-            progressItem.update(0.7);
+            progressItem.update(0.7, "Collecting device information...");
             Log.i(Constants.LOG_TAG,"Reading all manifests...");
             JSONObject manifests = readAllManifests(context);
 
@@ -727,7 +728,7 @@ public class TestUtils {
                 devinfo.put("manifestCookies", null);
             }
 
-            progressItem.update(1.0); // Final 30% progress for Android manifests of system applications
+            progressItem.update(1.0,  context.getResources().getString(R.string.pa_status_finished_collecting_device_info)); // Final 30% progress for Android manifests of system applications
             Log.i(Constants.LOG_TAG,"Finished reading all manifests.");
             return devinfo;
         } catch(Exception e){

@@ -1,6 +1,7 @@
 package de.srlabs.patchanalysis_module.helpers;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import de.srlabs.patchanalysis_module.Constants;
 import de.srlabs.patchanalysis_module.analysis.PatchanalysisService;
 
 /**This class contains all the helper methods for calling subprocess like e.g. objdump
@@ -131,7 +133,7 @@ public class ProcessHelper {
         if (exitValue == 0 && !realErrorOnStderr) {
             return result;
         } else {
-            throw new IllegalStateException("objdump terminated with exit code " + exitValue + " STDERR: \n" + TextUtils.join("\n", stderrLines));
+            throw new IllegalStateException("subprocess: "+TextUtils.join(" ", cmd)+"\n terminated with exit code " + exitValue + " STDERR: \n" + TextUtils.join("\n", stderrLines));
         }
     }
 
@@ -209,11 +211,35 @@ public class ProcessHelper {
         InputStream stdout = p.getInputStream();
         OutputStream stdin = p.getOutputStream();
 
+
+
         //write bytesToSendToStdin to stdin of sigtool
         //Log.d(Constants.LOG_TAG, "DEBUG: writing bytes to stdin of sigtool:" + Signature.bytesToHex(bytesToSendToStdin));
         stdin.write(bytesToSendToStdin);
         stdin.flush();
         stdin.close();
+
+
+        final BufferedReader stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        final Vector<String> stderrLines = new Vector<>();
+        Thread stderrThread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    String line = null;
+                    try {
+                        line = stderr.readLine();
+                    } catch (IOException e) {
+                        return;
+                    }
+                    if (line == null)
+                        return;
+                    stderrLines.add(line);
+                }
+            }
+        };
+        stderrThread.start();
+
         //Log.d(Constants.LOG_TAG, "DEBUG: finished writing bytes to stdin of sigtool!");
 
         //read stdout of sigtool and parse to byte[]
@@ -222,10 +248,22 @@ public class ProcessHelper {
         for (int len; (len = stdout.read(buffer)) != -1;) {
             stdoutBuffer.write(buffer, 0, len);
         }
-        //Log.d(Constants.LOG_TAG, "DEBUG: Finished reading stdout of sigtool!");
 
-        if (stdoutBuffer.size() == 0)
-            throw new IOException("Empty stdout response from sigtool!");
+        int exitValue = 0;
+        //Log.d(Constants.LOG_TAG, "DEBUG: Finished reading stdout of sigtool!");
+        try {
+            p.waitFor();
+            exitValue = p.exitValue();
+            stderrThread.join();
+        }catch(InterruptedException ex){
+            Log.d(Constants.LOG_TAG,"Interrupted waiting for sigtool to end: "+ ex.getMessage());
+        }
+
+        for (String line : stderrLines) {
+            if (line.contains("unused DT entry"))
+                continue;
+            throw new IllegalStateException("sigtool search: terminated with exit code " + exitValue + " STDERR: \n" + TextUtils.join("\n", stderrLines));
+        }
 
         return stdoutBuffer.toByteArray();
     }

@@ -2,7 +2,6 @@ package de.srlabs.patchanalysis_module.analysis;
 
 import android.app.Notification;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -61,6 +60,7 @@ public class PatchanalysisService extends Service {
     private long timeBeforeTesting;
     private int secondsNeededForTesting = 0;
     private PowerManager.WakeLock wakeLock;
+    private String lastStatusMessage = null;
 
     @Override
     public void onCreate() {
@@ -149,8 +149,9 @@ public class PatchanalysisService extends Service {
         Log.d(Constants.LOG_TAG,"PatchanalysisService: Parsing testsuite...");
         Log.d(Constants.LOG_TAG, "PatchanalysisService: testSuiteFile:" + testSuiteFile.getAbsolutePath());
         testSuite = new TestSuite(this, testSuiteFile);
+        parseTestSuiteProgress.update(0.1, PatchanalysisService.this.getResources().getString(R.string.pa_status_start_fetching_test_chunks));
         testSuite.parseInfoFromJSON();
-        parseTestSuiteProgress.update(1.0);
+        parseTestSuiteProgress.update(1.0, PatchanalysisService.this.getResources().getString(R.string.pa_status_finished_parsing_testsuite));
         Log.i(Constants.LOG_TAG,"Parsing testsuite and additional data chunks finished.");
         basicTestCache = new BasicTestCache(this, testSuite.getVersion(), Build.VERSION.SDK_INT);
         Log.d(Constants.LOG_TAG,"PatchanalysisService: Finished parsing testsuite!");
@@ -180,7 +181,7 @@ public class PatchanalysisService extends Service {
             //Log.d(Constants.LOG_TAG,"Updating callbacks.");
             PatchanalysisService.patchanalysisMainActivityCallback = callback;
             if (isAnalysisRunning) {
-                updateProgress();
+                updateProgress(lastStatusMessage);
             }
         }
 
@@ -304,7 +305,7 @@ public class PatchanalysisService extends Service {
         }
 
         clearProgress();
-        updateProgress();
+        updateProgress(null);
 
         //acquire wake lock
         wakeLock.acquire();
@@ -344,7 +345,7 @@ public class PatchanalysisService extends Service {
             parseTestSuiteProgress = null;
         }
 
-        updateProgress();
+        updateProgress(null);
 
         ProgressItem downloadRequestsProgress = addProgressItem("downloadRequests", 0.5);
         Thread requestsThread = new RequestsThread(downloadRequestsProgress, certifiedBuildChecker);
@@ -368,7 +369,7 @@ public class PatchanalysisService extends Service {
                         api.reportTest(results, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
                                 TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse());
                         Log.i(Constants.LOG_TAG,"Uploading test results finished...");
-                        uploadTestResultsProgress.update(1.0);
+                        uploadTestResultsProgress.update(1.0, null);
                         apiRunning = false;
                     }
                 } catch(IOException | IllegalStateException e){
@@ -404,7 +405,7 @@ public class PatchanalysisService extends Service {
                                     TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse());
                         }
                         Log.i(Constants.LOG_TAG,"Uploading device info finished...");
-                        uploadDeviceInfoProgress.update(1.0);
+                        uploadDeviceInfoProgress.update(1.0, null);
                         apiRunning = false;
                     }
                 } catch(IllegalStateException | IOException e){
@@ -495,9 +496,12 @@ public class PatchanalysisService extends Service {
         return totalProgress;
     }
 
-    public void updateProgress() {
+    public void updateProgress(String statusMessage) {
+        if (statusMessage != null) {
+            lastStatusMessage = statusMessage;
+        }
         double totalProgress = getTotalProgress();
-        sendProgressToCallback(totalProgress);
+        sendProgressToCallback(totalProgress, statusMessage);
         if(totalProgress == 1.0) {
             onFinishedAnalysis();
         }
@@ -580,13 +584,13 @@ public class PatchanalysisService extends Service {
         });
     }
 
-    private void sendProgressToCallback(final double totalProgress){
+    private void sendProgressToCallback(final double totalProgress, final String statusMessage){
         handler.post(new Runnable(){
             @Override
             public void run() {
                 try {
                     if (patchanalysisMainActivityCallback != null) {
-                        patchanalysisMainActivityCallback.updateProgress(totalProgress);
+                        patchanalysisMainActivityCallback.updateProgress(totalProgress, statusMessage);
                     }
                 } catch (RemoteException e) {
                     Log.e(Constants.LOG_TAG, "PatchanalysisService.updateProgress() RemoteException: "+ e.getClass());
@@ -665,10 +669,11 @@ public class PatchanalysisService extends Service {
                     return;
                 }
                 downloadingTestSuite = true;
+                downloadProgress.update(0.1, PatchanalysisService.this.getResources().getString(R.string.pa_status_downloading_testsuite));
                 Log.d(Constants.LOG_TAG,"Downloading testsuite from server...");
                 File f = api.downloadTestSuite("newtestsuite",PatchanalysisService.this, getAppId(), Build.VERSION.SDK_INT,"0", Constants.APP_VERSION);
                 Log.i(Constants.LOG_TAG,"Downloading testsuite finished. Fetching additional data chunks...");
-                downloadProgress.update(1.0);
+                downloadProgress.update(1.0, PatchanalysisService.this.getResources().getString(R.string.pa_status_finished_downloading_testsuite));
                 Log.d(Constants.LOG_TAG,"Finished downloading testsuite JSON to file:"+f.getAbsolutePath());
                 downloadingTestSuite = false;
                 parseTestSuiteFile(f,parsingProgress);
@@ -733,13 +738,13 @@ public class PatchanalysisService extends Service {
                     return;
                 }
                 JSONArray requestsJson = api.getRequests(getAppId(), Build.VERSION.SDK_INT, TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(), TestUtils.getBuildDateUtc(), Constants.APP_VERSION);
-                downloadRequestsProgress.update(1.0);
+                downloadRequestsProgress.update(1.0, null);
                 Log.i(Constants.LOG_TAG,"Downloading requests finished...");
                 for(int i=0;i<requestsJson.length();i++){
                     //Log.i(Constants.LOG_TAG, "Adding progress item for request " + i);
                     requestProgress.add(addProgressItem("Request_" + i, 1.0));
                 }
-                updateProgress();
+                updateProgress(null);
                 for(int i=0;i<requestsJson.length();i++){
                     JSONObject request = requestsJson.getJSONObject(i);
                     String requestType = request.getString("requestType");
@@ -753,12 +758,12 @@ public class PatchanalysisService extends Service {
                         }
                         api.reportFile(filename, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(), TestUtils.getBuildDateUtc(),
                                 Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse());
-                        requestProgress.get(i).update(1.0);
-                        updateProgress();
+                        requestProgress.get(i).update(1.0, null);
+                        updateProgress(null);
                     } else{
                         Log.e(Constants.LOG_TAG, "Received invalid request type " + requestType);
-                        requestProgress.get(i).update(1.0);
-                        updateProgress();
+                        requestProgress.get(i).update(1.0, null);
+                        updateProgress(null);
                     }
                 }
                 Log.i(Constants.LOG_TAG,"Reporting files to server finished...");
@@ -768,11 +773,11 @@ public class PatchanalysisService extends Service {
                     reportError(NO_INTERNET_CONNECTION_ERROR);
                     handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                 }
-                downloadRequestsProgress.update(1.0);
+                downloadRequestsProgress.update(1.0, null);
                 for(ProgressItem x:requestProgress){
-                    x.update(1.0);
+                    x.update(1.0, null);
                 }
-                updateProgress();
+                updateProgress(null);
             }
         }
     }

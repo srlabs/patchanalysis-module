@@ -11,10 +11,10 @@ public class ProgressItem{
         this.name = name;
         this.weight = weight;
     }
-    public void update(double progress){
+    public void update(double progress, String statusMessage){
         this.progress = progress;
         if(service != null)
-            service.updateProgress();
+            service.updateProgress(statusMessage);
     }
     public double getWeight(){
         return weight;

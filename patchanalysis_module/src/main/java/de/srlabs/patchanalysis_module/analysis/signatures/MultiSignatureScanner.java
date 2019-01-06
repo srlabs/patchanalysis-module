@@ -79,7 +79,7 @@ public class MultiSignatureScanner {
 		buf.write(Signature.pack(checksumLengths.keySet().size()));
 		NavigableSet<Integer> checksumLenghtsKeys = checksumLengths.navigableKeySet(); //TODO test! -> this should be sorted in ascending order
 		for (Integer checksumLen : checksumLenghtsKeys) {
-			Log.d(Constants.LOG_TAG, "DEBUG: checksumLen: " + checksumLen);
+			// Log.d(Constants.LOG_TAG, "DEBUG: checksumLen: " + checksumLen);
 			buf.write(Signature.pack(checksumLengths.get(checksumLen).size()));
 			buf.write(Signature.pack(checksumLen));
 			for (byte[] checksum : checksumLengths.get(checksumLen)) {

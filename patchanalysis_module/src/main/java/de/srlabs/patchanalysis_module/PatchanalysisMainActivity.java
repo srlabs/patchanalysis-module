@@ -78,6 +78,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     private static final int SDCARD_PERMISSION_RCODE = 1;
     private TestCallbacks callbacks = new TestCallbacks();
     private boolean isActivityActive = false;
+    private String oldStatusMessage = null;
 
     private ActivityState nonPersistentState = ActivityState.PATCHLEVEL_DATES;
 
@@ -170,11 +171,19 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         percentageText.setText(percentageString+"%");
     }
 
+    private void showStatusMessage(String statusMessage){
+        if (statusMessage != null && !statusMessage.equals(oldStatusMessage)) {
+                oldStatusMessage = statusMessage;
+                String explain = "<i>" + statusMessage + "</i></br>" + this.getResources().getString(R.string.patchanalysis_meta_info_analysis_in_progress);
+                showMetaInformation("<b>"+this.getResources().getString(R.string.patchanalysis_sum_result_chart_analysis_in_progress)+"</b>", explain);
+        }
+    }
+
     private String getWebViewFontStyle() {
         return "<head><style type=\"text/css\">body { " +
                     "    font-family: sans-serif-condensed;\n" +
                     "    font-size: 11sp;\n" +
-                    "    font-color: #58585b;\n" +
+                    "    font-color: %2358585b;\n" +
                     "    text-align: justify;\n" +
                     "}</style></head>";
     }
@@ -200,13 +209,20 @@ public class PatchanalysisMainActivity extends FragmentActivity {
 
 
         @Override
-        public void updateProgress(final double progressPercent) throws RemoteException {
-            Log.i(Constants.LOG_TAG, "PatchanalysisMainActivity received updateProgress(" + progressPercent + ")");
+        public void updateProgress(final double progressPercent, final String statusMessage) throws RemoteException {
+            Log.i(Constants.LOG_TAG, "PatchanalysisMainActivity received updateProgress(" + progressPercent + ", statusMessage: "+statusMessage+")");
             handler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (isActivityActive) {
                         PatchanalysisMainActivity.this.setProgressBarPercent(progressPercent);
+                        if(statusMessage != null){
+                                PatchanalysisMainActivity.this.showStatusMessage(statusMessage);
+                        }
+                    }
+                    else{
+                        if(statusMessage != null && !statusMessage.equals(oldStatusMessage))
+                            oldStatusMessage = statusMessage;
                     }
                 }
             });
@@ -267,7 +283,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         if(explain != null)
             html += "<br/>" + explain;
         html += "</body></html>\n";
-        Log.i(Constants.LOG_TAG,"Meta information text:\n"+html);
+        // Log.i(Constants.LOG_TAG,"Meta information text:\n"+html);
         wv.setBackgroundColor(Color.TRANSPARENT);
         wv.loadData(html, "text/html; charset=utf-8","utf-8");
         metaInfoTextScrollView.addView(wv);
@@ -374,7 +390,11 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                 resultChart.setAnalysisRunning(true);
                 webViewContent.setVisibility(View.INVISIBLE);
                 displayCutline(null);
-                showMetaInformation(this.getResources().getString(R.string.patchanalysis_sum_result_chart_analysis_in_progress), this.getResources().getString(R.string.patchanalysis_meta_info_analysis_in_progress));
+                if(oldStatusMessage != null) {
+                    showStatusMessage(oldStatusMessage);
+                }else {
+                    showMetaInformation(this.getResources().getString(R.string.patchanalysis_analysis_in_progress), this.getResources().getString(R.string.patchanalysis_meta_info_analysis_in_progress));
+                }
             } else {
                 // Analysis is not running
                 resultChart.setAnalysisRunning(false);
@@ -503,6 +523,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
 
 
     private void showPatchlevelDateNoTable(){
+        Log.d(Constants.LOG_TAG, "Showing optional CVEs: "+getShowOptionalCVES(this));
         String refPatchlevelDate = TestUtils.getPatchlevelDate();
         Log.i(Constants.LOG_TAG, "refPatchlevelDate=" + refPatchlevelDate);
         Log.i(Constants.LOG_TAG, "showPatchlevelDateNoTable()");
@@ -567,6 +588,11 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                         continue;
 
                     statusColors.add(color);
+                }
+
+                //Do not show empty categories (rows)
+                if(statusColors.size() == 0){
+                    continue;
                 }
 
                 int[] tmp = new int[statusColors.size()];
@@ -638,13 +664,13 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                     html.append("<p style=\"background-color:"+identifierColor+";white-space: nowrap; margin:5px 0; padding: 5px;\">");
                 }
                 else{
-                    html.append("<td style=\"border-bottom: 1px solid #ddd;\">");
+                    html.append("<td style=\"border-bottom: 1px solid rgb(221, 221, 221);\">");
                     html.append("<p style=\"background-color:"+identifierColor+";white-space: nowrap; margin-right:10px; padding: 5px;\">");
                 }
 
                 html.append(identifier);
                 html.append("</p></td>");
-                html.append("<td style=\"border-bottom: 1px solid #ddd;padding:5px 0;\">");
+                html.append("<td style=\"border-bottom: 1px solid rgb(221, 221, 221);padding:5px 0;\">");
                 html.append("<p>");
                 html.append(description);
                 html.append("</p></td>");

@@ -17,6 +17,7 @@ import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import de.srlabs.patchanalysis_module.Constants;
+import de.srlabs.patchanalysis_module.R;
 import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 import de.srlabs.patchanalysis_module.helpers.SharedPrefsHelper;
@@ -199,7 +200,7 @@ public class BasicTestCache {
             database.closeDB();
 
             if(!stopTesting) {
-                progressItem.update(1.0);
+                progressItem.update(1.0, "Finished testing!");
                 service.finishedBasicTests();
                 if(finishedRunnable != null) {
                     finishedRunnable.run();
@@ -283,9 +284,9 @@ public class BasicTestCache {
             }
             //Log.i(Constants.LOG_TAG, "BasicTestCache Thread evaluated " + uuid + " to " + result + "  progressDone=" + progressDone + "  progressTotal=" + progressTotal);
             if(progressTotal == 0){
-                progressItem.update(1.0);
+                progressItem.update(1.0, service.getResources().getString(R.string.pa_status_finished_performing_basic_tests));
             } else {
-                progressItem.update(((double) progressDone) / ((double) progressTotal));
+                progressItem.update(((double) progressDone) / ((double) progressTotal), service.getResources().getString(R.string.pa_status_performing_basic_tests));
             }
         }
 
