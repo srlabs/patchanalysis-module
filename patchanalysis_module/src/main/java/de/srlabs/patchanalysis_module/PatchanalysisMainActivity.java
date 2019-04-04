@@ -70,6 +70,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     private PatchanalysisSumResultChart resultChart;
 
     private ITestExecutorServiceInterface mITestExecutorService;
+    private NotificationHelper notificationHelper;
 
     private boolean isServiceBound=false;
     private boolean noInternetDialogShowing = false;
@@ -124,6 +125,9 @@ public class PatchanalysisMainActivity extends FragmentActivity {
             progressBox.setVisibility(View.GONE);
             showMetaInformation(this.getResources().getString(R.string.patchanalysis_too_old_android_api_level),null);
         }
+
+
+        notificationHelper = new NotificationHelper(this.getApplicationContext(), AppFlavor.getAppFlavor());
 
     }
 
@@ -334,9 +338,6 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     }
 
 
-
-
-
     @Override
     protected void onResume(){
         super.onResume();
@@ -348,7 +349,6 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         }
         restoreState();
     }
-
 
 
     private void startServiceIfNotRunning(){
@@ -367,19 +367,22 @@ public class PatchanalysisMainActivity extends FragmentActivity {
     @Override
     protected void onPause(){
         super.onPause();
-        NotificationHelper.cancelNonStickyNotifications(this);
+        notificationHelper.cancelNonStickyNotifications();
         isActivityActive = false;
     }
 
     @Override
     protected void onDestroy(){
         super.onDestroy();
+        if(mConnection != null){
+            unbindService(mConnection);
+        }
         SharedPrefsHelper.clearSavedStickyErrorMessage(PatchanalysisMainActivity.this);
     }
 
 
     private synchronized void restoreState(){
-        NotificationHelper.cancelNonStickyNotifications(this);
+        notificationHelper.cancelNonStickyNotifications();
         ActivityState tempNonPersistentState = nonPersistentState;
         try {
             if (mITestExecutorService != null && mITestExecutorService.isAnalysisRunning()) {

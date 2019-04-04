@@ -61,6 +61,7 @@ public class PatchanalysisService extends Service {
     private int secondsNeededForTesting = 0;
     private PowerManager.WakeLock wakeLock;
     private String lastStatusMessage = null;
+    private NotificationHelper notificationHelper;
 
     @Override
     public void onCreate() {
@@ -74,6 +75,8 @@ public class PatchanalysisService extends Service {
         APP_FLAVOR = AppFlavor.getAppFlavor();
 
         initDatabase();
+
+        notificationHelper = new NotificationHelper(PatchanalysisService.this, AppFlavor.getAppFlavor());
 
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SnoopSnitch Patchanalysis");
@@ -528,7 +531,7 @@ public class PatchanalysisService extends Service {
         isAnalysisRunning = false;
         sendFinishedToCallback(analysisResultString, isBuildCertified());
 
-        NotificationHelper.showAnalysisFinishedNotification(APP_FLAVOR, PatchanalysisService.this);
+        notificationHelper.showAnalysisFinishedNotification();
 
         stopForeground(true);
         stopSelf();
@@ -560,7 +563,7 @@ public class PatchanalysisService extends Service {
     // Calling this will cause the service to be killed
     private void handleFatalErrorViaCallback(final String stickyErrorMessage){
         SharedPrefsHelper.saveStickyErrorMessage(stickyErrorMessage, PatchanalysisService.this);
-        NotificationHelper.showAnalysisFailedNotification(APP_FLAVOR, PatchanalysisService.this);
+        notificationHelper.showAnalysisFailedNotification();
         handler.post(new Runnable(){
             @Override
             public void run() {
@@ -804,7 +807,7 @@ public class PatchanalysisService extends Service {
         isAnalysisRunning = true;
         currentAnalysisTimestamp = System.currentTimeMillis();
 
-        Notification notification = NotificationHelper.getAnalysisOngoingNotification(APP_FLAVOR, PatchanalysisService.this);
+        Notification notification = notificationHelper.getAnalysisOngoingNotification();
         startForeground(NotificationHelper.ONGOING_NOTIFICATION_ID, notification);
 
         sendReloadViewStateToCallback();

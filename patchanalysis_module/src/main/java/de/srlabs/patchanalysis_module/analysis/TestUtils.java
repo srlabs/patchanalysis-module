@@ -444,7 +444,7 @@ public class TestUtils {
         }
     }
     public static long getBuildDateUtc(){
-        String buildDateUtc = getBuildProperty("ro.build.date.utc");
+        /*String buildDateUtc = getBuildProperty("ro.build.date.utc"); - old approach, directly reading with getprop subprocess
         if(buildDateUtc == null)
             return -1;
 
@@ -454,8 +454,11 @@ public class TestUtils {
         }catch(NumberFormatException e){
             Log.d(Constants.LOG_TAG,"Found invalid, malformated builddate: "+buildDateUtc);
             return -1;
-        }
+        } */
 
+        // new approach, using Build.TIME: https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/os/Build.java
+        long buildDate = Build.TIME / 1000L;
+        return buildDate;
     }
     public static String getBuildFingerprint(){
         String result = getBuildProperty("ro.build.fingerprint");

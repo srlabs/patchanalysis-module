@@ -31,7 +31,8 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
             SharedPrefsHelper.clearSavedAnalysisResult(context);
             SharedPrefsHelper.putLongPersistent(SharedPrefsHelper.KEY_BUILD_DATE_NOTIFICATION_DISPLAYED, currentBuildDate, context);
             if (!(buildDateUtcAtLastSuccessfulAnalysis == -1)) {
-                NotificationHelper.showBuildVersionChangedNotification(AppFlavor.getAppFlavor(), context);
+                NotificationHelper notificationHelper = new NotificationHelper(context, AppFlavor.getAppFlavor());
+                notificationHelper.showBuildVersionChangedNotification();
             }
         }
     }

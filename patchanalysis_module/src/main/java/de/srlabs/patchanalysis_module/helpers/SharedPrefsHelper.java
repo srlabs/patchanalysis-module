@@ -165,7 +165,7 @@ public class SharedPrefsHelper {
             return cachedResultJSON;
         }
 
-        Log.d(Constants.LOG_TAG, "Reading analysisResult from sharedPrefs");
+        //Log.d(Constants.LOG_TAG, "Reading analysisResult from sharedPrefs");
         SharedPreferences settings = getSharedPrefs(context);
 
         String analysisResultString = settings.getString(KEY_ANALYSIS_RESULT, "");

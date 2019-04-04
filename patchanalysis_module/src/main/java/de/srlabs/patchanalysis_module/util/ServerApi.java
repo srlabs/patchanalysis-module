@@ -28,7 +28,7 @@ import de.srlabs.patchanalysis_module.analysis.TestUtils;
  * This class handles all the up- and downloads to/from the backend
  */
 public class ServerApi {
-    public static final String API_URL="https://snoopsnitch-api.srlabs.de/v1/";
+    public static final String API_URL = ServerURL.API_URL;
 
     public File downloadTestSuite(String filenamePrefix, Context context, String appid, int apiVersion, String currentVersion, int appVersion) throws IllegalStateException, IOException{
         URL url = new URL(API_URL + "test/suite?appId=" + appid + "&androidApiVersion=" + apiVersion + "&testVersion=" + URLEncoder.encode(currentVersion, "UTF-8") + "&appVersion=" + appVersion + "&64bit="+ TestUtils.is64BitSystem());
