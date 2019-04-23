@@ -34,8 +34,8 @@ import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.helpers.database.PADatabaseManager;
 import de.srlabs.patchanalysis_module.helpers.database.PASQLiteOpenHelper;
 import de.srlabs.patchanalysis_module.util.CertifiedBuildChecker;
-import de.srlabs.patchanalysis_module.views.PatchanalysisSumResultChart;
 import de.srlabs.patchanalysis_module.util.ServerApi;
+import de.srlabs.patchanalysis_module.views.PatchanalysisSumResultChart;
 import de.srlabs.patchanalysis_module.helpers.NotificationHelper;
 import de.srlabs.patchanalysis_module.helpers.SharedPrefsHelper;
 
@@ -257,8 +257,6 @@ public class PatchanalysisService extends Service {
                 vulnerabilityResult.put("notAffected", notAffected);
                 if(vulnerability.has("optional"))
                     vulnerabilityResult.put("optional", vulnerability.getBoolean("optional"));
-
-
                 if (notAffected == null || !notAffected) {
                     JSONObject testVulnerable = vulnerability.getJSONObject("testVulnerable");
                     Boolean vulnerable = TestEngine.runTest(basicTestCache, testVulnerable);

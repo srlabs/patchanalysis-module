@@ -839,12 +839,10 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         AppFlavor.getAppFlavor().setShowOptionalCVEs(context, showOptionalCVEs);
     }*/
 
+    public int getShowInconclusiveMenuItemId() { return R.id.menu_action_pa_inconclusive; }
+
     private boolean getShowOptionalCVES(Context context) {
         return AppFlavor.getAppFlavor().getShowOptionalCVES(context);
-    }
-
-    public int getShowInconclusiveMenuItemId() {
-        return R.id.menu_action_pa_inconclusive;
     }
 
     public int getPatchAnalysisMenuId() {
