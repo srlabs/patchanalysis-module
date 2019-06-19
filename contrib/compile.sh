@@ -12,6 +12,22 @@
 export BASE_DIR="$( cd "$( dirname $0 )" && pwd )"
 export OUTPUT_DIR=$BASE_DIR/builds
 
+
+export ANDROID_VER="28"
+export MACH=$(uname -m)
+export KERN=$(uname -s)
+export HOST="linux-${MACH}"
+
+export SYSROOT="${NDK_DIR}/platforms/android-${ANDROID_VER}/arch-arm"
+export MSD_CONFIGURE_OPTS="--host arm-linux-androideabi --prefix=${MSD_DESTDIR}"
+export PATH=${PATH}:${NDK_DIR}/toolchains/arm-linux-androideabi-4.9/prebuilt/${HOST}/bin/
+export CROSS_COMPILE=arm-linux-androideabi
+export RANLIB=arm-linux-androideabi-ranlib
+export CFLAGS="--sysroot=${SYSROOT}"
+export CPPFLAGS="-I${NDK_DIR}/platforms/android-${ANDROID_VER}/arch-arm/usr/include/ -fPIE"
+export LDFLAGS="--sysroot=${SYSROOT} -Wl,-rpath-link=${NDK_DIR}/platforms/android-${ANDROID_VER}/arch-arm/usr/lib/,-L${NDK_DIR}/platforms/android-${ANDROID_VER}/arch-arm/usr/lib/ -pie"
+export LIBS="-lc -lm"
+
 # init git submodules (if necessary)
 git submodule init busybox
 git submodule init binutils-gdb
@@ -43,6 +59,3 @@ for i in ${TARGETS}; do
         exit 1
     fi
 done
-
-
-
