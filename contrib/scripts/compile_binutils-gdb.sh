@@ -1,25 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
-cd $BASE_DIR/binutils-gdb/bfd
-./configure $HOST_TARGET_OPTS --disable-option-checking  CXX=${CROSS_COMPILE}-g++ CC=${CROSS_COMPILE}-gcc  --disable-nls
+set -e
+set -x
+
+case ${target} in
+	android)
+		HOST_TARGET_OPTS="--host arm-linux-androideabi --enable-targets=arm-linux-androideabi,aarch64-linux-gnu,aarch64_be-linux-gnu"
+		;;
+	android64)
+	    HOST_TARGET_OPTS="--host aarch64-linux-androideabi --enable-targets=arm-linux-androideabi,aarch64-linux-gnu,aarch64_be-linux-gnu"
+	    ;;
+esac
+
+
+cd $BASE_DIR/binutils-gdb/
+# Make sure all artefacts from previous compilation runs are deleted
+# Required when switching between different architectures (host, arm, aarch64)
+git reset --hard
+git clean -d -f -x
+
+cd bfd/
+./configure $HOST_TARGET_OPTS --disable-option-checking --disable-nls
 make -j4
 cd ../libiberty
-./configure $HOST_TARGET_OPTS --disable-option-checking  CXX=${CROSS_COMPILE}-g++ CC=${CROSS_COMPILE}-gcc  --disable-nls
+./configure $HOST_TARGET_OPTS --disable-option-checking --disable-nls
 make -j4
 cd ../opcodes
-./configure $HOST_TARGET_OPTS --disable-option-checking  CXX=${CROSS_COMPILE}-g++ CC=${CROSS_COMPILE}-gcc  --disable-nls
+./configure $HOST_TARGET_OPTS --disable-option-checking --disable-nls
 make -j4
 cd ../binutils
-./configure $HOST_TARGET_OPTS --disable-option-checking  CXX=${CROSS_COMPILE}-g++ CC=${CROSS_COMPILE}-gcc  --disable-nls
-make -j4
+./configure $HOST_TARGET_OPTS --disable-option-checking --disable-nls
+make -j4 objdump
 
 pwd
 cp objdump $BASE_DIR/builds/libobjdump.so
-
-#perl -i.bak -pe '$_="// REMOVED\n if /^#include <stdio_ext.h>/' libiberty/fopen_unlocked.c
-#perl -i.bak -pe '$_="// REMOVED\n if /^#include <sys\/sysctl.h.h>/' libiberty/physmem.c
-
-#perl -i.bak -pe '$_="// REMOVED\n" if /^\s*#\s*include\s*<stdio_ext.h>/' intl/localealias.c
-
-
-# export CFLAGS="$CFLAGS -DHAVE_STDIO_EXT_H=0"
