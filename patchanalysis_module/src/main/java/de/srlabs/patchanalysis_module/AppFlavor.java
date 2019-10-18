@@ -2,10 +2,13 @@ package de.srlabs.patchanalysis_module;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.MenuItem;
 
 /**
- * This interface helps declaring enviromental dependencies for certain app flavors
+ * This interface helps declaring environmental dependencies for certain app flavors
  * We suggest extending android.app.Application and calling setAppFlavor
  * with the respective implementation in onCreate
  */
@@ -17,6 +20,15 @@ public abstract class AppFlavor {
 
     public AppFlavor(Context context) {
         this.BINARIES_PATH = context.getApplicationInfo().dataDir + "/lib/";
+        try {
+            ApplicationInfo ainfo = context.getApplicationContext().getPackageManager().getApplicationInfo("de.srlabs.snoopsnitch", PackageManager.GET_SHARED_LIBRARY_FILES);
+            this.BINARIES_PATH = ainfo.nativeLibraryDir + "/";
+
+        } catch(PackageManager.NameNotFoundException e){
+            Log.d(Constants.LOG_TAG, "Could not retrieve location of binaries, using fallback.");
+        }
+
+        Log.d(Constants.LOG_TAG, "set binaries path to: " + this.BINARIES_PATH);
     }
 
     public String getBinaryPath() {

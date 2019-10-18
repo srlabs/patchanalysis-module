@@ -3,6 +3,7 @@
 set -e
 set -x
 
+echo "target: ${target}"
 case ${target} in
 	android)
 		HOST_TARGET_OPTS="--host arm-linux-androideabi --enable-targets=arm-linux-androideabi,aarch64-linux-gnu,aarch64_be-linux-gnu"
@@ -31,6 +32,3 @@ make -j4
 cd ../binutils
 ./configure $HOST_TARGET_OPTS --disable-option-checking --disable-nls
 make -j4 objdump
-
-pwd
-cp objdump $BASE_DIR/builds/libobjdump.so

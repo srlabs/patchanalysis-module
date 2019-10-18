@@ -3,9 +3,6 @@
 set -e
 set -x
 
-
-HOST_TARGET_OPTS="--host arm-linux-androideabi --enable-targets=arm-linux-androideabi,aarch64-linux-gnu,aarch64_be-linux-gnu"
-
 export CROSS_COMPILE="${CROSS_COMPILE}-"
 
 cd $BASE_DIR/busybox
@@ -26,5 +23,3 @@ patch -p1 < $BASE_DIR/patches/busybox_name.patch
 
 #build
 make -j4 CC=$CC
-
-cp busybox $BASE_DIR/builds/libbusybox.so
