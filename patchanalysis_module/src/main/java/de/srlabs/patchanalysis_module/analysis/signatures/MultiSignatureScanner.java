@@ -132,25 +132,27 @@ public class MultiSignatureScanner {
 
 		//Log.d(Constants.LOG_TAG, "DEBUG: Gathering results information...");
 		Set<SymbolInformation> foundItems = new HashSet<SymbolInformation>();
-		for (RollingSignature checker : signatureChecker) {
-			//Log.d(Constants.LOG_TAG, "DEBUG: checksumLen=" + checker.getCheckSumLen() + " sigOffset=" + checker.getChecksumOffset() + " sigStr=" + checker.toString());
-			int checksumLen = checker.getCheckSumLen();
-			//Log.d(Constants.LOG_TAG, "DEBUG: checksum1: " + Signature.bytesToHex(checker.getChecksum1()) + " checksum2:" + Signature.bytesToHex(checker.getChecksum2()));
+		if(checksumsFound.size() > 0) {
+			for (RollingSignature checker : signatureChecker) {
+				//Log.d(Constants.LOG_TAG, "DEBUG: checksumLen=" + checker.getCheckSumLen() + " sigOffset=" + checker.getChecksumOffset() + " sigStr=" + checker.toString());
+				int checksumLen = checker.getCheckSumLen();
+				//Log.d(Constants.LOG_TAG, "DEBUG: checksum1: " + Signature.bytesToHex(checker.getChecksum1()) + " checksum2:" + Signature.bytesToHex(checker.getChecksum2()));
 
-			if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum2())) == null) {
-				//Log.d(Constants.LOG_TAG, "DEBUG: checksum2 not found!");
-				continue;
-			}
-			if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum1())) == null ) {
-				//Log.d(Constants.LOG_TAG, "DEBUG: checksum1 not found!");
-				continue;
-			}
+				if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum2())) == null) {
+					//Log.d(Constants.LOG_TAG, "DEBUG: checksum2 not found!");
+					continue;
+				}
+				if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum1())) == null) {
+					//Log.d(Constants.LOG_TAG, "DEBUG: checksum1 not found!");
+					continue;
+				}
 
-			for (Long found1pos : checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum1()))) {
-				//Log.d(Constants.LOG_TAG, "DEBUG: FOUND1: " + checker.toString() + " at " + found1pos);
-				long wantedFound2pos = found1pos + checker.getChecksumOffset();
-				if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum2())).contains(wantedFound2pos)) {
-					foundItems.add(new SymbolInformation(checker.toString(), found1pos)); //TODO solve this!
+				for (Long found1pos : checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum1()))) {
+					//Log.d(Constants.LOG_TAG, "DEBUG: FOUND1: " + checker.toString() + " at " + found1pos);
+					long wantedFound2pos = found1pos + checker.getChecksumOffset();
+					if (checksumsFound.get(checksumLen).get(Signature.bytesToHex(checker.getChecksum2())).contains(wantedFound2pos)) {
+						foundItems.add(new SymbolInformation(checker.toString(), found1pos)); //TODO solve this!
+					}
 				}
 			}
 		}
