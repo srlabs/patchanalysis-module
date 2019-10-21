@@ -90,6 +90,7 @@ public class MultiSignatureScanner {
 		//Log.d(Constants.LOG_TAG, "DEBUG: byte buffer size:" + buf.size());
 		byte[] result = ProcessHelper.sendByteBufferToSigToolSearch("sigtool", buf.toByteArray(), "--aarch64v1", targetFile.getAbsolutePath());
 		if(isPermissionDeniedError(result)){
+			Log.d(Constants.LOG_TAG, "Got 'permission denied error' when accessing file: " + filePath);
 			throw new IOException("Error when scanning file: "+filePath+" - Permission denied.");
 		}
 		if ((result.length % 16) != 0) {
@@ -158,11 +159,14 @@ public class MultiSignatureScanner {
 	}
 
 	private boolean isPermissionDeniedError(byte[] result) {
-		if(result != null){
+		if(result != null) {
 			String resultString = Signature.bytesToHex(result);
-			String permissionDeniedHexMessage = "4661696c656420746f206f70656e2066696c650a3a205065726d697373696f6e2064656e6965640a";
-			Log.d(Constants.LOG_TAG,"resultString: "+resultString+" permissionDeniedHex: "+permissionDeniedHexMessage);
-			return resultString.equals(permissionDeniedHexMessage);
+			String[] permissionDeniedHexMessages = {"4661696c656420746f206f70656e2066696c650a3a205065726d697373696f6e2064656e6965640a", "4661696c656420746f206f70656e2066696c653a205065726d697373696f6e2064656e6965640a"};
+			//Log.d(Constants.LOG_TAG,"resultString: "+resultString+" permissionDeniedHex: "+permissionDeniedHexMessage);
+			for (String permissionDeniedHexMessage : permissionDeniedHexMessages) {
+				if (resultString.equals(permissionDeniedHexMessage))
+					return true;
+			}
 		}
 		return false;
 	}
