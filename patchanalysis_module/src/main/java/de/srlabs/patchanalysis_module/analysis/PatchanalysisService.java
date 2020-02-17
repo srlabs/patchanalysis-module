@@ -2,10 +2,13 @@ package de.srlabs.patchanalysis_module.analysis;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -402,8 +405,13 @@ public class PatchanalysisService extends Service {
                                 handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_dialog_no_internet_connection_text));
                                 return;
                             }
+                            Context context = getApplicationContext();
+                            SharedPreferences sharedPrefs = SharedPrefsHelper.getPersistentSharedPrefs(context);
+                            String updateInfo = sharedPrefs.getString(SharedPrefsHelper.KEY_UPDATE_INFO, "not_set");
+                            updateInfo = Uri.encode(updateInfo);
+                            System.out.println("[Debug] Update Information: " + updateInfo);
                             api.reportSys(deviceInfoJson, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
-                                    TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse());
+                                    TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse(), updateInfo);
                         }
                         Log.i(Constants.LOG_TAG,"Uploading device info finished...");
                         uploadDeviceInfoProgress.update(1.0, null);

@@ -28,6 +28,10 @@ public class SharedPrefsHelper {
     public static final String KEY_BUILD_FINGERPRINT = "KEY_BUILD_FINGERPRINT";
     public static final String KEY_BUILD_DISPLAY_NAME = "KEY_BUILD_DISPLAY_NAME";
     public static final String KEY_BUILD_APPVERSION = "KEY_BUILD_APPVERSION";
+    public static final String KEY_BUILD_SPL = "KEY_BUILD_SPL";
+
+    // Information containg info about updated firmware
+    public static final String KEY_UPDATE_INFO = "KEY_UPDATE_INFO";
 
     //SafetyNet responses
     private static final String KEY_BUILD_CERTIFIED_CTSPROFILE_MATCH = "KEY_CERTIFIED_BUILD_CTSMATCHPROFILE_RESPONSE";
@@ -94,6 +98,7 @@ public class SharedPrefsHelper {
         editor.putString(KEY_BUILD_FINGERPRINT, TestUtils.getBuildFingerprint());
         editor.putString(KEY_BUILD_DISPLAY_NAME, TestUtils.getBuildDisplayName());
         editor.putInt(KEY_BUILD_APPVERSION, Constants.APP_VERSION);
+        editor.putString(KEY_BUILD_SPL, TestUtils.getPatchlevelDate());
         editor.commit();
     }
 

@@ -166,11 +166,11 @@ public class ServerApi {
         connection.disconnect();
         throw new IllegalStateException("reportFile(): The server returned an invalid response code " + code + "  Response contents: " + errorResponse);
     }
-    public void reportSys(JSONObject sysinfo, String appid, String phoneModel, String romBuildFingerprint, String romDisplayName, long romBuildDate, int appVersion,Boolean ctsProfileMatch, Boolean basicIntegrity) throws IllegalStateException, IOException {
+    public void reportSys(JSONObject sysinfo, String appid, String phoneModel, String romBuildFingerprint, String romDisplayName, long romBuildDate, int appVersion,Boolean ctsProfileMatch, Boolean basicIntegrity, String updateInfo) throws IllegalStateException, IOException {
         URL url = new URL(API_URL + "report/system?appId=" + URLEncoder.encode(appid,"UTF-8") +
                 "&phoneModel=" + URLEncoder.encode(phoneModel, "UTF-8") + "&romBuildFingerprint=" + URLEncoder.encode(romBuildFingerprint, "UTF-8") +
                 "&romDisplayName=" + URLEncoder.encode(romDisplayName, "UTF-8") + "&romBuildDate=" + romBuildDate + "&appVersion=" + appVersion+
-                "&ctsProfileMatch="+ ctsProfileMatch + "&basicIntegrity="+basicIntegrity);
+                "&ctsProfileMatch="+ ctsProfileMatch + "&basicIntegrity="+basicIntegrity + "&updateInfo=" + updateInfo);
         Log.i(Constants.LOG_TAG, "reportSys() URL: " + url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("connection", "close");

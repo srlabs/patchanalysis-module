@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import de.srlabs.patchanalysis_module.analysis.TestUtils;
 import de.srlabs.patchanalysis_module.helpers.NotificationHelper;
 import de.srlabs.patchanalysis_module.helpers.SharedPrefsHelper;
@@ -35,5 +38,40 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
                 notificationHelper.showBuildVersionChangedNotification();
             }
         }
+
+        // Get information when an upgrade was installed
+        long currentTime = System.currentTimeMillis() / 1000;
+        String currentSPL = TestUtils.getPatchlevelDate();
+        String currentBuildFingerprint = TestUtils.getBuildFingerprint();
+        String previousSPL = sharedPrefs.getString(SharedPrefsHelper.KEY_BUILD_SPL, "not_set");
+        String previousBuildFingerprint = sharedPrefs.getString(SharedPrefsHelper.KEY_BUILD_FINGERPRINT, "not_set");
+        long previousBuildDate = sharedPrefs.getLong(SharedPrefsHelper.KEY_BUILD_DATE, -1);
+
+        if (previousBuildFingerprint != "not_set") {
+            if (currentBuildFingerprint != previousBuildFingerprint || currentBuildDate != previousBuildDate ||
+                    currentSPL != previousSPL) {
+
+                JSONObject updateInfo = new JSONObject();
+                try {
+                    updateInfo.put("updateTimestamp", currentTime);
+                    updateInfo.put("previousBuildFingerprint", previousBuildFingerprint);
+                    updateInfo.put("previousBuildTimestamp", previousBuildDate);
+                    updateInfo.put("previousSPL", previousSPL);
+                    updateInfo.put("buildFingerprint", currentBuildFingerprint);
+                    updateInfo.put("buildTimestamp", currentBuildDate);
+                    updateInfo.put("SPL", currentSPL);
+                } catch (JSONException e) {
+                    Log.d(Constants.LOG_TAG,"Could not create JSON object containing update info", e);
+                }
+
+                SharedPrefsHelper.putStringPersistent(SharedPrefsHelper.KEY_UPDATE_INFO, updateInfo.toString(), context);
+
+            }
+
+        }
+
+        SharedPrefsHelper.putLongPersistent(SharedPrefsHelper.KEY_BUILD_DATE, currentBuildDate, context);
+        SharedPrefsHelper.putStringPersistent(SharedPrefsHelper.KEY_BUILD_FINGERPRINT, currentBuildFingerprint, context);
+        SharedPrefsHelper.putStringPersistent(SharedPrefsHelper.KEY_BUILD_SPL, currentSPL, context);
     }
 }
