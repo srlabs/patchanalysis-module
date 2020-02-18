@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -407,9 +406,7 @@ public class PatchanalysisService extends Service {
                             }
                             Context context = getApplicationContext();
                             SharedPreferences sharedPrefs = SharedPrefsHelper.getPersistentSharedPrefs(context);
-                            String updateInfo = sharedPrefs.getString(SharedPrefsHelper.KEY_UPDATE_INFO, "not_set");
-                            updateInfo = Uri.encode(updateInfo);
-                            System.out.println("[Debug] Update Information: " + updateInfo);
+                            String updateInfo = sharedPrefs.getString(SharedPrefsHelper.KEY_UPDATE_INFO, "{}");
                             api.reportSys(deviceInfoJson, getAppId(), TestUtils.getDeviceModel(), TestUtils.getBuildFingerprint(), TestUtils.getBuildDisplayName(),
                                     TestUtils.getBuildDateUtc(), Constants.APP_VERSION, certifiedBuildChecker.getCtsProfileMatchResponse(), certifiedBuildChecker.getBasicIntegrityResponse(), updateInfo);
                         }

@@ -170,8 +170,17 @@ public class ServerApi {
         URL url = new URL(API_URL + "report/system?appId=" + URLEncoder.encode(appid,"UTF-8") +
                 "&phoneModel=" + URLEncoder.encode(phoneModel, "UTF-8") + "&romBuildFingerprint=" + URLEncoder.encode(romBuildFingerprint, "UTF-8") +
                 "&romDisplayName=" + URLEncoder.encode(romDisplayName, "UTF-8") + "&romBuildDate=" + romBuildDate + "&appVersion=" + appVersion+
-                "&ctsProfileMatch="+ ctsProfileMatch + "&basicIntegrity="+basicIntegrity + "&updateInfo=" + updateInfo);
+                "&ctsProfileMatch="+ ctsProfileMatch + "&basicIntegrity="+basicIntegrity);
         Log.i(Constants.LOG_TAG, "reportSys() URL: " + url);
+
+        try {
+            JSONObject updateInfoJSON = new JSONObject(updateInfo);
+            sysinfo.put("updateInfo", updateInfoJSON);
+
+        } catch (JSONException e) {
+            Log.d(Constants.LOG_TAG,"Could not add updateInfo to sysinfo object", e);
+        }
+
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestProperty("connection", "close");
         connection.setRequestMethod("POST");

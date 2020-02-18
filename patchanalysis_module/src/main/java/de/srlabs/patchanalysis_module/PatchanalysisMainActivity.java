@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -36,7 +35,6 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -55,7 +53,6 @@ import de.srlabs.patchanalysis_module.helpers.ServiceConnectionHelper;
 import de.srlabs.patchanalysis_module.helpers.SharedPrefsHelper;
 import de.srlabs.patchanalysis_module.views.PatchanalysisSumResultChart;
 import de.srlabs.patchanalysis_module.views.PatchlevelDateOverviewChart;
-
 
 import static de.srlabs.patchanalysis_module.Constants.getVulnerabilityIndicatorColor;
 
@@ -127,17 +124,7 @@ public class PatchanalysisMainActivity extends FragmentActivity {
             showMetaInformation(this.getResources().getString(R.string.patchanalysis_too_old_android_api_level),null);
         }
 
-
         notificationHelper = new NotificationHelper(this.getApplicationContext(), AppFlavor.getAppFlavor());
-
-        Context context = getApplicationContext();
-        long currentBuildDate = TestUtils.getBuildDateUtc();
-        String currentSPL = TestUtils.getPatchlevelDate();
-        String currentBuildFingerprint = TestUtils.getBuildFingerprint();
-
-        SharedPrefsHelper.putLongPersistent(SharedPrefsHelper.KEY_BUILD_DATE, currentBuildDate, context);
-        SharedPrefsHelper.putStringPersistent(SharedPrefsHelper.KEY_BUILD_FINGERPRINT, currentBuildFingerprint, context);
-        SharedPrefsHelper.putStringPersistent(SharedPrefsHelper.KEY_BUILD_SPL, currentSPL, context);
     }
 
     private void showErrorMessageInMetaInformation(String errorMessage) {

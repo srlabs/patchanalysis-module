@@ -43,14 +43,25 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
         long currentTime = System.currentTimeMillis() / 1000;
         String currentSPL = TestUtils.getPatchlevelDate();
         String currentBuildFingerprint = TestUtils.getBuildFingerprint();
+
         String previousSPL = sharedPrefs.getString(SharedPrefsHelper.KEY_BUILD_SPL, "not_set");
         String previousBuildFingerprint = sharedPrefs.getString(SharedPrefsHelper.KEY_BUILD_FINGERPRINT, "not_set");
         long previousBuildDate = sharedPrefs.getLong(SharedPrefsHelper.KEY_BUILD_DATE, -1);
 
+        if (currentSPL == null) {
+            currentSPL = "NULL";
+            Log.d(Constants.LOG_TAG,"Found invalid patchlevel date");
+        }
+        if (currentBuildFingerprint == "NULL") {
+            Log.d(Constants.LOG_TAG,"Found invalid build fingerprint");
+        }
+
         if (previousBuildFingerprint != "not_set") {
+
             if (currentBuildFingerprint != previousBuildFingerprint || currentBuildDate != previousBuildDate ||
                     currentSPL != previousSPL) {
 
+                Log.d(Constants.LOG_TAG,"Detected firmware upgrade");
                 JSONObject updateInfo = new JSONObject();
                 try {
                     updateInfo.put("updateTimestamp", currentTime);
