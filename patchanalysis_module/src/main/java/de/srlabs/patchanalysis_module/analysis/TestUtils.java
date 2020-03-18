@@ -415,7 +415,15 @@ public class TestUtils {
         return getBuildProperty("ro.board.platform").toUpperCase().startsWith("TEGRA");
     }
     public static boolean isSamsung(){
-        return getBuildProperty("ro.board.platform").toUpperCase().startsWith("EXYNOS");
+        if (getBuildProperty("ro.board.platform").toUpperCase().startsWith("EXYNOS")){
+            return true;
+        }
+        else if (getBuildProperty("ro.board.platform").toUpperCase().startsWith("UNIVERSAL98")){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
     public static String getChipVendor(){
         if(isQualcomm())
