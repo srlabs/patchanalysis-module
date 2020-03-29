@@ -36,6 +36,7 @@ import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.helpers.database.PADatabaseManager;
 import de.srlabs.patchanalysis_module.helpers.database.PASQLiteOpenHelper;
 import de.srlabs.patchanalysis_module.util.CertifiedBuildChecker;
+import de.srlabs.patchanalysis_module.util.FoundInvalidBasicTestException;
 import de.srlabs.patchanalysis_module.util.ServerApi;
 import de.srlabs.patchanalysis_module.views.PatchanalysisSumResultChart;
 import de.srlabs.patchanalysis_module.helpers.NotificationHelper;
@@ -155,7 +156,12 @@ public class PatchanalysisService extends Service {
         Log.d(Constants.LOG_TAG, "PatchanalysisService: testSuiteFile:" + testSuiteFile.getAbsolutePath());
         testSuite = new TestSuite(this, testSuiteFile);
         parseTestSuiteProgress.update(0.1, PatchanalysisService.this.getResources().getString(R.string.pa_status_start_fetching_test_chunks));
-        testSuite.parseInfoFromJSON();
+        try{
+            testSuite.parseInfoFromJSON();
+        } catch (FoundInvalidBasicTestException e){
+            Log.e(Constants.LOG_TAG, "Found invalid basicTest", e);
+            handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_invalid_basic_test));
+        }
         parseTestSuiteProgress.update(1.0, PatchanalysisService.this.getResources().getString(R.string.pa_status_finished_parsing_testsuite));
         Log.i(Constants.LOG_TAG,"Parsing testsuite and additional data chunks finished.");
         basicTestCache = new BasicTestCache(this, testSuite.getVersion(), Build.VERSION.SDK_INT);

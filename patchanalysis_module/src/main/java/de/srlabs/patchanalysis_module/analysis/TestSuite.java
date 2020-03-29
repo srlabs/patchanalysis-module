@@ -20,6 +20,7 @@ import java.util.Set;
 import de.srlabs.patchanalysis_module.Constants;
 import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.util.BasicTestParser;
+import de.srlabs.patchanalysis_module.util.FoundInvalidBasicTestException;
 import de.srlabs.patchanalysis_module.util.ServerApi;
 
 /** This class contains all the testsuite meta information
@@ -45,7 +46,7 @@ public class TestSuite {
         this.testSuiteFile = testsuiteJSONFile;
     }
 
-    private void addBasicTestsToDB(File file) throws IllegalStateException{
+    private void addBasicTestsToDB(File file) throws IllegalStateException, FoundInvalidBasicTestException {
         if(file == null || !file.exists())
             throw new IllegalStateException("JSON file does not exist!");
         BasicTestParser parser = new BasicTestParser(file);
@@ -67,7 +68,7 @@ public class TestSuite {
         db.closeDB();
     }
 
-    public void parseInfoFromJSON() throws IOException{ //TODO differentiate between IOException when parsing JSON or when downloading chunks
+    public void parseInfoFromJSON() throws IOException, FoundInvalidBasicTestException{ //TODO differentiate between IOException when parsing JSON or when downloading chunks
         if(testSuiteFile == null || !testSuiteFile.exists())
             throw new IllegalStateException("testSuiteJSON file does not exist!");
             InputStream inputStream = new FileInputStream(testSuiteFile);
@@ -145,7 +146,7 @@ public class TestSuite {
         }
     }
 
-    private void parseBasicTestChunks(JsonReader jsonReader) {
+    private void parseBasicTestChunks(JsonReader jsonReader) throws FoundInvalidBasicTestException {
         if(jsonReader != null){
             DBHelper database = new DBHelper(context);
             try {

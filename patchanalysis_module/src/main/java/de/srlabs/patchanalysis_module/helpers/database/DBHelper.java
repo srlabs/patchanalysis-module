@@ -20,6 +20,7 @@ import java.util.Vector;
 
 import de.srlabs.patchanalysis_module.Constants;
 import de.srlabs.patchanalysis_module.util.BasicTestParser;
+import de.srlabs.patchanalysis_module.util.FoundInvalidBasicTestException;
 
 /**This class acts as a helper to query the SQLite DB
  * Created by jonas on 04.04.18.
@@ -50,7 +51,7 @@ public class DBHelper {
      * @param basicTest
      * @return
      */
-    public void insertBasicTestToDB(final JSONObject basicTest) throws IllegalStateException, SQLiteConstraintException {
+    public void insertBasicTestToDB(final JSONObject basicTest) throws IllegalStateException, SQLiteConstraintException, FoundInvalidBasicTestException {
         if(basicTest == null ){
             throw new IllegalStateException(mTAG+"Null objects can not be added to DB, sneaky...");
         }
@@ -68,7 +69,6 @@ public class DBHelper {
                 keys.add(keyIterator.next());
             }
 
-            //will throw an exception if information not sufficient
             BasicTestParser.checkTestTypeSufficientInfo(basicTest);
 
             ContentValues values = new ContentValues();

@@ -302,29 +302,29 @@ public class BasicTestParser {
     }
 
     /**
-     * Makes sure that for a specific test type we find all the neccessary information or throws Exceptions instead
+     * Makes sure that for a specific test type we find all the necessary information or throws Exceptions instead
      * @param basicTest
      * @throws JSONException
-     * @throws IllegalStateException
+     * @throws FoundInvalidBasicTestException
      */
-    public static void checkTestTypeSufficientInfo(JSONObject basicTest) throws JSONException, IllegalStateException{
+    public static void checkTestTypeSufficientInfo(JSONObject basicTest) throws JSONException, FoundInvalidBasicTestException{
         if (basicTest == null || !basicTest.has("testType"))
-            throw new IllegalStateException("basic test not valid!");
+            throw new FoundInvalidBasicTestException("BasicTest is missing the \"testType\" keyword!");
 
         String testType = basicTest.getString("testType");
 
         if (!TEST_TYPE_FIELDS.containsKey(testType))
-            throw new IllegalStateException("Unknown testType of basicTest");
+            throw new FoundInvalidBasicTestException("Unknown testType of basicTest:" + "\"" + testType + "\"");
 
         for(String fieldname : TEST_TYPE_FIELDS.get(testType)){
             if(fieldname.contains(";")){
                 String[] parts = fieldname.split(";");
                 if(!basicTest.has(parts[0]) && !basicTest.has(parts[1])){
-                    throw new IllegalStateException("(parts:"+parts[0]+" - "+parts[1]+" -Missing necessary field for a test: "+testType+" :"+fieldname);
+                    throw new FoundInvalidBasicTestException("(parts:"+parts[0]+" - "+parts[1]+" -Missing necessary field for a test: "+testType+" :"+fieldname);
                 }
             }
             else if(!basicTest.has(fieldname))
-                throw new IllegalStateException("Missing necessary field for a test: "+testType+" :"+fieldname);
+                throw new FoundInvalidBasicTestException("Missing necessary field for a test: "+testType+" :"+fieldname);
         }
 
     }

@@ -94,6 +94,11 @@ public class BasicTestCache {
             return !subtestResult;
         }
         JSONObject basicTest = database.getBasicTestByUUID(uuid);
+        if (basicTest == null){
+            Log.d(Constants.LOG_TAG,"Could not find basicTest " + uuid + " in db");
+            cacheResult(uuid, null);
+            return null;
+        }
         if(basicTest.has("exception") && !basicTest.getString("exception").equals("")) {
             exceptionsByTestId.put(uuid, basicTest.getString("exception"));
             cacheResult(uuid,null);

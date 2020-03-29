@@ -19,7 +19,8 @@ CREATE TABLE basictests (
     vendor TEXT,
     rollingSignature TEXT,
     maskSignature TEXT,
-    androidVersion TEXT
+    androidVersion TEXT,
+    feature TEXT
 );
 
 DROP TABLE IF EXISTS basictest_chunks;

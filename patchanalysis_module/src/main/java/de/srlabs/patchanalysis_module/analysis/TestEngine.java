@@ -356,6 +356,17 @@ public class TestEngine {
                 }
                 return false;
             }
+            case "DEVICE_HAS_FEATURE": {
+                PackageManager packageManager = context.getPackageManager();
+                String requestedFeature = test.getString("feature");
+                if (requestedFeature == null || requestedFeature == ""){
+                    return false;
+                }
+                else {
+                    return packageManager.hasSystemFeature(requestedFeature);
+                }
+            }
+
             default:
                 throw new IllegalArgumentException("Unknown testType " + testType);
         }
