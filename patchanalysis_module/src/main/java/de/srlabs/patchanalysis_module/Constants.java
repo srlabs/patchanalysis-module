@@ -43,10 +43,11 @@ public class Constants  {
         try {
             if(vulnerability.has("patchlevelDate")) //if the vulnerability has more detailed information about patch level date
                 refPatchlevelDate = vulnerability.getString("patchlevelDate");
-            if (vulnerability.isNull("fixed") || vulnerability.isNull("vulnerable") || vulnerability.isNull("notAffected")) {
-                return Constants.COLOR_INCONCLUSIVE;
-            } else if(!vulnerability.isNull("notAffected") && vulnerability.getBoolean("notAffected")){
+            if(!vulnerability.isNull("notAffected") && vulnerability.getBoolean("notAffected")) {
                 return Constants.COLOR_NOTAFFECTED;
+            } else if (vulnerability.isNull("fixed") || vulnerability.isNull("vulnerable") ||
+                    (vulnerability.getBoolean("fixed") && vulnerability.getBoolean("vulnerable"))) {
+                return Constants.COLOR_INCONCLUSIVE;
             } else if (vulnerability.getBoolean("fixed") && !vulnerability.getBoolean("vulnerable")) {
                 return Constants.COLOR_PATCHED;
             } else if (!vulnerability.getBoolean("fixed") && vulnerability.getBoolean("vulnerable")) {
@@ -55,7 +56,7 @@ public class Constants  {
                 return Constants.COLOR_MISSING;
             }
         }catch(JSONException e){
-            Log.e(Constants.LOG_TAG,"Problem assigning color for tests",e);
+            Log.e(Constants.LOG_TAG,"Problem assigning color for tests", e);
         }
         // default color
         return Constants.COLOR_INCONCLUSIVE;
