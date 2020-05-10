@@ -1,6 +1,7 @@
 package de.srlabs.patchanalysis_module.analysis;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Base64;
 import android.util.Log;
 
