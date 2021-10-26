@@ -626,50 +626,55 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         }
     }
 
-    private void showDetailsNoTable(String category){
+    private void showDetailsNoTable(String category) {
 
         String refPatchlevelDate = TestUtils.getPatchlevelDate();
         Log.i(Constants.LOG_TAG, "refPatchlevelDate=" + refPatchlevelDate);
         int numAffectedVulnerabilities = 0;
-        try{
+        try {
             JSONObject testResults = SharedPrefsHelper.getAnalysisResult(this);
-            if(testResults == null){
-                showMetaInformation(this.getResources().getString(R.string.patchanalysis_claimed_patchlevel_date)+": " + refPatchlevelDate,this.getResources().getString(R.string.patchanalysis_no_test_result)+"!");
+            if (testResults == null) {
+                showMetaInformation(this.getResources().getString(R.string.patchanalysis_claimed_patchlevel_date) + ": " + refPatchlevelDate, this.getResources().getString(R.string.patchanalysis_no_test_result) + "!");
                 return;
             }
             JSONArray vulnerabilitiesForPatchlevelDate = testResults.getJSONArray(category);
 
             WebView wv = new WebView(PatchanalysisMainActivity.this);
             StringBuilder html = new StringBuilder();
-            html.append("<html>"+getWebViewFontStyle()+"<body><table style=\"border-collapse:collapse;\">\n");
+            html.append("<html>" + getWebViewFontStyle() + "<body><table style='border-collapse:collapse;'>\n");
 
-            for(int i=0;i<vulnerabilitiesForPatchlevelDate.length();i++) {
+            for (int i = 0; i < vulnerabilitiesForPatchlevelDate.length(); i++) {
                 JSONObject vulnerability = vulnerabilitiesForPatchlevelDate.getJSONObject(i);
                 int resultColor = getVulnerabilityIndicatorColor(vulnerability, category);
 
-                if(!getShowInconclusivePatchAnalysisTestResults(this) && resultColor == Constants.COLOR_INCONCLUSIVE) // do not show and count inconclusive results, if disabled in settings
+                if (!getShowInconclusivePatchAnalysisTestResults(this) && resultColor == Constants.COLOR_INCONCLUSIVE) // do not show and count inconclusive results, if disabled in settings
                     continue;
 
-                if(vulnerability.has("optional") && vulnerability.getBoolean("optional") && !getShowOptionalCVES(this))
+                if (vulnerability.has("optional") && vulnerability.getBoolean("optional") && !getShowOptionalCVES(this))
                     continue;
 
                 String identifier = vulnerability.getString("identifier");
                 String identifierColor = toColorString(resultColor);
+                identifierColor = identifierColor.replace("#", "");
                 String description = vulnerability.getString("title");
                 html.append("<tr>");
 
                 if(category.equals("other")){
                     html.append("<td>");
-                    html.append("<p style=\"background-color:"+identifierColor+";white-space: nowrap; margin:5px 0; padding: 5px;\">");
+                    String style = "background-color: " + identifierColor + "; white-space: nowrap;" +
+                            "margin: 5px 0; padding: 5px;";
+                    html.append(String.format("<p style=%s>", style));
                 }
                 else{
-                    html.append("<td style=\"border-bottom: 1px solid rgb(221, 221, 221);\">");
-                    html.append("<p style=\"background-color:"+identifierColor+";white-space: nowrap; margin-right:10px; padding: 5px;\">");
+                    html.append("<td style='border-bottom: 1px solid rgb(221, 221, 221);'>");
+                    String style = "'background-color: " + identifierColor + "; white-space: nowrap;" +
+                            "margin-right: 10px; padding: 5px;'";
+                    html.append(String.format("<p style=%s>", style));
                 }
 
                 html.append(identifier);
                 html.append("</p></td>");
-                html.append("<td style=\"border-bottom: 1px solid rgb(221, 221, 221);padding:5px 0;\">");
+                html.append("<td style='border-bottom: 1px solid rgb(221, 221, 221);padding:5px 0;'>");
                 html.append("<p>");
                 html.append(description);
                 html.append("</p></td>");
@@ -677,19 +682,21 @@ public class PatchanalysisMainActivity extends FragmentActivity {
                 numAffectedVulnerabilities++;
             }
             html.append("</table></body></html>");
+
             wv.setBackgroundColor(Color.TRANSPARENT);
-            wv.loadData(html.toString(), "text/html; charset=utf-8","utf-8");
+            wv.loadData(html.toString(), "text/html; charset=utf-8", "utf-8");
             webViewContent.removeAllViews();
             webViewContent.addView(wv);
 
-            showCategoryMetaInfo(category,numAffectedVulnerabilities);
+            showCategoryMetaInfo(category, numAffectedVulnerabilities);
 
             nonPersistentState = ActivityState.VULNERABILITY_LIST;
             currentPatchlevelDate = category;
-        } catch(Exception e){
+        } catch (Exception e) {
             Log.e(Constants.LOG_TAG, "showDetailsNoTable Exception", e);
         }
     }
+
     private void showCategoryMetaInfo(String category, int numCVEs) {
         StringBuilder infoText = new StringBuilder();
         if(!category.equals("other")) {

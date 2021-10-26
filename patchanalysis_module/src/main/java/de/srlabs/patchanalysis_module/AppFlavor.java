@@ -13,7 +13,6 @@ import android.view.MenuItem;
  * with the respective implementation in onCreate
  */
 public abstract class AppFlavor {
-
     public static String BINARIES_PATH;
 
     private static AppFlavor activeFlavor;

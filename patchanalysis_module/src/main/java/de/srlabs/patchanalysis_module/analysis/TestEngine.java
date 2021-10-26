@@ -26,7 +26,6 @@ import java.util.zip.ZipFile;
 
 import de.srlabs.patchanalysis_module.AppFlavor;
 import de.srlabs.patchanalysis_module.Constants;
-
 import de.srlabs.patchanalysis_module.analysis.java_basic_tests.BuildPropertyTest;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 import de.srlabs.patchanalysis_module.analysis.java_basic_tests.AslrTest;

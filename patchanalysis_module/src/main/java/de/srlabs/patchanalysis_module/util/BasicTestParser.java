@@ -58,6 +58,7 @@ public class BasicTestParser {
         TEST_TYPE_FIELDS.put("COMBINED_SIGNATURE",new String[]{"filename","rollingSignature","maskSignature"});
         TEST_TYPE_FIELDS.put("ROLLING_SIGNATURE",new String[]{"filename","rollingSignature"});
         TEST_TYPE_FIELDS.put("ANDROID_VERSION_EQUALS",new String[]{"androidVersion"});
+        TEST_TYPE_FIELDS.put("DEVICE_HAS_FEATURE", new String[]{"feature"});
     }
 
     /**

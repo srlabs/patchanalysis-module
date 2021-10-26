@@ -174,6 +174,10 @@ public class ServerApi {
         Log.i(Constants.LOG_TAG, "reportSys() URL: " + url);
 
         try {
+            if (sysinfo == null) {
+                Log.d(Constants.LOG_TAG,"Sysinfo object is null");
+                sysinfo = new JSONObject("{}");
+            }
             JSONObject updateInfoJSON = new JSONObject(updateInfo);
             sysinfo.put("updateInfo", updateInfoJSON);
 
@@ -193,7 +197,8 @@ public class ServerApi {
         DataOutputStream request = new DataOutputStream(connection.getOutputStream());
         request.writeBytes("--" + boundary + "\r\n");
         request.writeBytes("Content-Disposition: form-data; name=\"systemData\"; filename=\"systemData\"\r\n\r\n");
-        request.write(sysinfo.toString().getBytes("UTF8"));
+        String encrypted = HTTPRequestUtil.encryptData(sysinfo.toString().getBytes());
+        request.writeBytes(encrypted);
         request.writeBytes("\r\n");
 
         request.writeBytes("--" + boundary + "--\r\n");
@@ -228,7 +233,8 @@ public class ServerApi {
         DataOutputStream request = new DataOutputStream(connection.getOutputStream());
         request.writeBytes("--" + boundary + "\r\n");
         request.writeBytes("Content-Disposition: form-data; name=\"testData\"; filename=\"testData\"\r\n\r\n");
-        request.writeBytes(testData.toString() + "\r\n");
+        String encrypted = HTTPRequestUtil.encryptData(testData.toString().getBytes());
+        request.writeBytes(encrypted + "\r\n");
         request.writeBytes("--" + boundary + "--\r\n");
         request.flush();
         request.close();

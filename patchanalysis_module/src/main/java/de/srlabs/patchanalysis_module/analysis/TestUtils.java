@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -210,7 +211,7 @@ public class TestUtils {
     }
     protected static boolean readBuildProperties(){
         HashMap<String, String> tempBuildProperties = new HashMap<>();
-        try{
+        try {
             Log.w("TestUtils", "Running getprop");
             String[] cmd = {"getprop"};
             Process p = Runtime.getRuntime().exec(cmd);
@@ -700,6 +701,7 @@ public class TestUtils {
             JSONObject devinfo = new JSONObject();
             if (buildProperties == null)
                 readBuildProperties();
+            censorBlacklistedBuildProperties();
             JSONObject buildProps = new JSONObject(buildProperties);
             devinfo.put("buildProperties", buildProps);
             devinfo.put("appId", getAppId(appFlavor, context));
@@ -746,6 +748,27 @@ public class TestUtils {
             Log.e(Constants.LOG_TAG, "Exception in makeDeviceinfoJson", e);
             return null;
         }
+    }
+
+    protected static void censorBlacklistedBuildProperties() {
+
+        String[] blacklist = {"gsm.device.imei", "gsm.sc.address", "microvirt.imei",
+                "persist.radio.device.code", "persist.radio.device.imei", "persist.ss.xui.info_",
+                "persist.vendor.radio.ut.xui.info_", "ril.sms.sim0.smsc", "ril.sms.sim1.smsc",
+                "sys.mmi.imei", "gsm.operator.alpha", "gsm.sim.operator.alpha", "gsm.serial",
+                "persist.radio.meid", "ro.ril.vmail."};
+
+        for (Map.Entry<String, String> entry: buildProperties.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            for(String blacklistedPrefix: blacklist) {
+                if (key.startsWith(blacklistedPrefix)) {
+                    buildProperties.put(key, "censored");
+                }
+            }
+        }
+
     }
 
 

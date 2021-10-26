@@ -72,4 +72,5 @@
     <string name="pa_status_performing_basic_tests">"Executing tests...</string>
     <string name="pa_notification_channel_title">Patch Analysis</string>
     <string name="pa_notification_channel_desc">All notifications during Android security patch analysis</string>
+
 </resources>
