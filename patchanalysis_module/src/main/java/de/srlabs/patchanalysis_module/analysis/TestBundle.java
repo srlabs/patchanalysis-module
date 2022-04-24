@@ -4,10 +4,10 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Vector;
 
+import de.srlabs.patchanalysis_module.analysis.java_basic_tests.dexparser.DexClass;
+import de.srlabs.patchanalysis_module.analysis.java_basic_tests.dexparser.DexContainer;
 import de.srlabs.patchanalysis_module.analysis.signatures.SymbolInformation;
 
 /**This class bundles similar tests (== same file and probably same test type) together to cache certain information.
@@ -23,6 +23,32 @@ public class TestBundle {
     private String filename = null;
     private boolean isStopMarker = false;
     private boolean targetFileExists = true;
+    public DexCache dexCache = new DexCache();
+
+    public class DexCache {
+        private DexContainer container = null;
+        private Boolean isValid = null;
+        private Boolean fileHasBeenProcessed = false;
+
+        public void setIsValid(Boolean isValid) {
+            this.isValid = isValid;
+        }
+        public Boolean getIsValid() {
+            return isValid;
+        }
+        public void setContainer(DexContainer container) {
+            this.container = container;
+        }
+        public DexContainer getContainer() {
+            return container;
+        }
+        public void setFileHasBeenProcessed(Boolean fileHasBeenProcessed) {
+           this.fileHasBeenProcessed = fileHasBeenProcessed;
+        }
+        public Boolean getFileHasBeenProcessed() {
+            return fileHasBeenProcessed;
+        }
+    }
 
     private TestBundle(){
         this.basicTests = new Vector<JSONObject>();

@@ -59,6 +59,16 @@ public class BasicTestParser {
         TEST_TYPE_FIELDS.put("ROLLING_SIGNATURE",new String[]{"filename","rollingSignature"});
         TEST_TYPE_FIELDS.put("ANDROID_VERSION_EQUALS",new String[]{"androidVersion"});
         TEST_TYPE_FIELDS.put("DEVICE_HAS_FEATURE", new String[]{"feature"});
+        TEST_TYPE_FIELDS.put("DEX_IS_VALID", new String[]{"dexPath"});
+        TEST_TYPE_FIELDS.put("DEX_CONTAINS_CLASS", new String[]{"dexPath", "class"});
+        TEST_TYPE_FIELDS.put("DEX_CLASS_CONTAINS_METHOD", new String[]{"dexPath", "class", "method"});
+        TEST_TYPE_FIELDS.put("DEX_CLASS_CONTAINS_STATIC_FIELD", new String[]{"dexPath", "class", "field"});
+        TEST_TYPE_FIELDS.put("DEX_CLASS_CONTAINS_INSTANCE_FIELD", new String[]{"dexPath", "class", "field"});
+        TEST_TYPE_FIELDS.put("DEX_STATIC_FIELD_FLAGS", new String[]{"dexPath", "class", "field", "flagsMask", "flagsValue"});
+        TEST_TYPE_FIELDS.put("DEX_INSTANCE_FIELD_FLAGS", new String[] {"dexPath", "class", "field", "flagsMask", "flagsValue"});
+        TEST_TYPE_FIELDS.put("DEX_METHOD_FLAGS", new String[]{"dexPath", "class", "method", "flagsMask", "flagsValue"});
+        TEST_TYPE_FIELDS.put("DEX_METHOD_HAS_CODE", new String[]{"dexPath", "class", "method"});
+        TEST_TYPE_FIELDS.put("DEX_METHOD_SIGNATURE", new String[]{"dexPath", "class", "method", "signature"});
     }
 
     /**
@@ -211,6 +221,7 @@ public class BasicTestParser {
                         case "severity":
                         case "title":
                         case "identifier":
+                        case "testType":
                         case "patchlevelDate":
                             String info = jsonReader.nextString();
                             //Log.d(Constants.LOG_TAG,"2nd layer) Found string: "+name+" -> "+info);

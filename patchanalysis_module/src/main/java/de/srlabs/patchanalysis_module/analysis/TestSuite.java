@@ -55,14 +55,20 @@ public class TestSuite {
         JSONObject basicTest = null;
 
         // write all basic tests to DB
-        while ((basicTest = parser.getNextBasicTest()) != null) {
-            try {
-                //Log.d(Constants.LOG_TAG,"Trying to insert basic test (uuid:"+basicTest.getString("uuid")+"to DB!");
-                db.insertBasicTestToDB(basicTest);
-            }catch(SQLiteConstraintException e){
-                //ignore, cause this prevents redundant entries in the DB
-                //Log.d(Constants.LOG_TAG,"-> basicTest already in DB!");
+        db.getDBInstance().beginTransaction();
+        try {
+            while ((basicTest = parser.getNextBasicTest()) != null) {
+                try {
+                    //Log.d(Constants.LOG_TAG,"Trying to insert basic test (uuid:"+basicTest.getString("uuid")+"to DB!");
+                    db.insertBasicTestToDB(basicTest);
+                } catch (SQLiteConstraintException e) {
+                    //ignore, cause this prevents redundant entries in the DB
+                    //Log.d(Constants.LOG_TAG,"-> basicTest already in DB!");
+                }
             }
+            db.getDBInstance().setTransactionSuccessful();
+        } finally {
+            db.getDBInstance().endTransaction();
         }
         parser.finishReading();
         db.closeDB();
@@ -161,14 +167,15 @@ public class TestSuite {
 
 
                 for(String basicTestChunkURL : basicTestChunkURLs){
-                    //Log.d(Constants.LOG_TAG,"Checking basic test chunk: "+basicTestChunkURL);
+                    Log.d(Constants.LOG_TAG,"Checking basic test chunk");
                     //already in DB?
                     if(!database.wasBasicTestChunkSuccessful(basicTestChunkURL)) {
-                        //Log.d(Constants.LOG_TAG,"Fetching basic test chunk :"+basicTestChunkURL);
+                        Log.d(Constants.LOG_TAG,"Fetching basic test chunk :"+basicTestChunkURL);
                         try {
                             File chunkFile = api.downloadBasicTestChunk(context, basicTestChunkURL);
-                            //Log.d(Constants.LOG_TAG,"Adding all basic tests from chunk: "+chunkFile.getAbsolutePath()+" to DB...");
+                            Log.d(Constants.LOG_TAG,"Adding all basic tests from chunk to DB...");
                             addBasicTestsToDB(chunkFile);
+                            Log.d(Constants.LOG_TAG, "Added basic tests to DB");
                             database.markBasicTestChunkSuccessful(basicTestChunkURL);
                         } catch (IOException | IllegalStateException e) {
                             Log.e(Constants.LOG_TAG, "Exception while downloading and parsing basic test chunk: " + basicTestChunkURL,e);

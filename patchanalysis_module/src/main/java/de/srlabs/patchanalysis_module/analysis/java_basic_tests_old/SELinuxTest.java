@@ -1,4 +1,4 @@
-package de.srlabs.patchanalysis_module.analysis.java_basic_tests;
+package de.srlabs.patchanalysis_module.analysis.java_basic_tests_old;
 
 import android.content.Context;
 import android.util.Log;

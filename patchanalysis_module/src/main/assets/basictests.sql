@@ -20,7 +20,13 @@ CREATE TABLE basictests (
     rollingSignature TEXT,
     maskSignature TEXT,
     androidVersion TEXT,
-    feature TEXT
+    feature TEXT,
+    dexPath TEXT,
+    class TEXT,
+    method TEXT,
+    field TEXT,
+    flagsMASK INTEGER,
+    flagsValue INTEGER
 );
 
 DROP TABLE IF EXISTS basictest_chunks;

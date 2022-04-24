@@ -18,6 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import de.srlabs.patchanalysis_module.Constants;
 import de.srlabs.patchanalysis_module.R;
+import de.srlabs.patchanalysis_module.analysis.java_basic_tests.dexparser.DexContainer;
 import de.srlabs.patchanalysis_module.helpers.database.DBHelper;
 import de.srlabs.patchanalysis_module.helpers.ProcessHelper;
 import de.srlabs.patchanalysis_module.helpers.SharedPrefsHelper;
@@ -49,6 +50,7 @@ public class BasicTestCache {
         this.sharedPrefs = SharedPrefsHelper.getSharedPrefs(service);
         this.database = new DBHelper(service);
         long currentBuildDate = TestUtils.getBuildDateUtc();
+
 
         // Invalidate cached results if the build fingerprint or the build timestamp (seconds since 1970) changes => Make sure that teste are repeated after a firmware upgrade
         // Also invalidate cache and rerun test if this app is updated.
@@ -141,6 +143,10 @@ public class BasicTestCache {
     public JSONObject toJson() throws IOException, JSONException {
         JSONObject result = new JSONObject();
         Vector<String> uuids = database.getAllBasicTestsUUIDs();
+        if (uuids == null) {
+            throw new NoTestsAvailableException("No basic tests in the DB for this API level");
+        }
+
         for(String uuid : uuids){
             Boolean subtestResult = getOrExecute(uuid);
             if(subtestResult == null) {
@@ -179,20 +185,28 @@ public class BasicTestCache {
                     break;
                 }
                 //check if results queue contains all results
-                for(int i=0; i < testBatchSize; i++) {
-                    try {
-                        BasicTestResult testResult = resultQueue.take();
-                        if (testResult.getException() != null) {
-                            Log.d(Constants.LOG_TAG,"TestResult: "+testResult.getBasicTestUUID()+" exception:"+testResult.getException());
-                            database.addTestExceptionToDB(testResult.getBasicTestUUID(), testResult.getException());
-                        } else {
-                            //Log.d(Constants.LOG_TAG,"TestResult: "+testResult.getBasicTestUUID()+" result:"+testResult.getResult());
-                            database.addTestResultToDB(testResult.getBasicTestUUID(), testResult.getResult());
+                database.getDBInstance().beginTransaction();
+                try {
+                    for(int i=0; i < testBatchSize; i++) {
+                        try {
+                            BasicTestResult testResult = resultQueue.take();
+                            if (testResult.getException() != null) {
+                                if (!testResult.getException().contains("File does not exist")) {
+                                    Log.d(Constants.LOG_TAG,"TestResult: "+testResult.getBasicTestUUID()+" exception:"+testResult.getException());
+                                }
+                                database.addTestExceptionToDB(testResult.getBasicTestUUID(), testResult.getException());
+                            } else {
+                                //Log.d(Constants.LOG_TAG,"TestResult: "+testResult.getBasicTestUUID()+" result:"+testResult.getResult());
+                                database.addTestResultToDB(testResult.getBasicTestUUID(), testResult.getResult());
+                            }
+                            updateTotalProgress();
+                        }catch(InterruptedException e){
+                            Log.e(Constants.LOG_TAG,"InterruptedException in MasterWorkingThread.run():"+e.getMessage());
                         }
-                        updateTotalProgress();
-                    }catch(InterruptedException e){
-                        Log.e(Constants.LOG_TAG,"InterruptedException in MasterWorkingThread.run():"+e.getMessage());
                     }
+                    database.getDBInstance().setTransactionSuccessful();
+                } finally {
+                    database.getDBInstance().endTransaction();
                 }
                 testBatchSize = addNextMissingTestBatch();
                 //Log.d(Constants.LOG_TAG,"testBatchSize:"+testBatchSize);
@@ -205,7 +219,7 @@ public class BasicTestCache {
             database.closeDB();
 
             if(!stopTesting) {
-                progressItem.update(1.0, "Finished testing!");
+                progressItem.update(1.0, "Finished testing! Preparing results...");
                 service.finishedBasicTests();
                 if(finishedRunnable != null) {
                     finishedRunnable.run();
@@ -246,12 +260,18 @@ public class BasicTestCache {
                 for (JSONObject basicTest : basicTestBatch) {
                     try {
                         //Log.d(Constants.LOG_TAG,"Adding basic test to bundle: "+basicTest.toString());
-                        if (!basicTest.has("filename")) {
+                        if (!basicTest.has("filename") && !basicTest.has("dexPath")) {
                             testsWithoutFilename.add(basicTest);//FIXME restrict size of this as well!!!
                         } else {
-                            String currentFilename = basicTest.getString("filename");
+                            String currentFilename = "";
+                            if (basicTest.has("filename")) {
+                                currentFilename = basicTest.getString("filename");
+                            } else {
+                                currentFilename = basicTest.getString("dexPath").split(":")[1];
+                            }
+
                             if (!lastFilename.equals(currentFilename)) {
-                                Log.d(Constants.LOG_TAG,"Creating new test bundle...");
+                                // Log.d(Constants.LOG_TAG,"Creating new test bundle: " + currentFilename);
                                 lastFilename = currentFilename;
 
                                 if (currentTestBundle != null) {
@@ -261,10 +281,10 @@ public class BasicTestCache {
                                 //create new testbundle
                                 currentTestBundle = new TestBundle(currentFilename);
                             }
-                            //Log.d(Constants.LOG_TAG,"Adding basic test to bundle: "+currentTestBundle.getFilename());
+                            // Log.d(Constants.LOG_TAG,"Adding basic test to bundle: "+currentTestBundle.getFilename());
                             currentTestBundle.add(basicTest);
                             if (currentTestBundle.getTestCount() == TEST_BUNDLE_SIZE) {
-                            testQueue.add(currentTestBundle);
+                                testQueue.add(currentTestBundle);
                                 currentTestBundle = new TestBundle(currentFilename);
                             }
                         }
@@ -361,6 +381,23 @@ public class BasicTestCache {
             }
         }
 
+        private DexContainer getCachedDexContainer(JSONObject basicTest, TestBundle bundle) throws JSONException, IOException {
+            if (!bundle.dexCache.getFileHasBeenProcessed()) {
+                DexContainer dexContainer = null;
+                Boolean isValid = true;
+                try {
+                    dexContainer = TestEngine.getDexContainer(basicTest);
+                } catch (IOException | JSONException e) {
+                    isValid = null;
+                } catch (Exception e) {
+                    isValid = false;
+                }
+                bundle.dexCache.setIsValid(isValid);
+                bundle.dexCache.setContainer(dexContainer);
+                bundle.dexCache.setFileHasBeenProcessed(true);
+            }
+            return bundle.dexCache.getContainer();
+        }
 
         private BasicTestResult performTest(TestBundle bundle, JSONObject basicTest){
             try {
@@ -371,8 +408,13 @@ public class BasicTestCache {
 
                 try {
                     String testType = basicTest.getString("testType");
+                    String filepath = "";
                     if(bundle.getFilename() != null){
-                        String filepath = basicTest.getString("filename");
+                        if (basicTest.has("filename")) {
+                            filepath = basicTest.getString("filename");
+                        } else {
+                            filepath = basicTest.getString("dexPath").split(":")[1];
+                        }
                         //if target file is missing, skip all testing and return test specific result immediately
                         if(!bundle.isTargetFileExisting()) {
                             switch (testType) {
@@ -417,10 +459,66 @@ public class BasicTestCache {
                             }
                             result = TestEngine.runDisasFunctionMatchesRegexTest(basicTest, bundle.getObjdumpLines());
                             break;
+                        case "DEX_IS_VALID":
+                            if (!bundle.dexCache.getFileHasBeenProcessed()) {
+                                Boolean isValid = true;
+                                DexContainer dexContainer = null;
+                                try {
+                                    dexContainer = TestEngine.getDexContainer(basicTest);
+                                } catch (IOException | JSONException e) {
+                                    isValid = null;
+                                } catch (Exception e) {
+                                    isValid = false;
+                                }
+                                bundle.dexCache.setIsValid(isValid);
+                                bundle.dexCache.setContainer(dexContainer);
+                                bundle.dexCache.setFileHasBeenProcessed(true);
+                            }
+                            result = bundle.dexCache.getIsValid();
+                            break;
+                        case "DEX_CONTAINS_CLASS":
+                            result = TestEngine.evaluateDexContainsClass(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_CLASS_CONTAINS_METHOD":
+                            result = TestEngine.evaluateDexClassContainsMethod(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_CLASS_CONTAINS_STATIC_FIELD":
+                            result = TestEngine.evaluateDexClassContainsStaticField(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_CLASS_CONTAINS_INSTANCE_FIELD":
+                            result = TestEngine.evaluateDexClassContainsInstanceField(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_STATIC_FIELD_FLAGS":
+                            result = TestEngine.evaluateDexStaticFieldFlags(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_INSTANCE_FIELD_FLAGS":
+                            result = TestEngine.evaluateDexInstanceFieldsFlags(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_METHOD_FLAGS":
+                            result = TestEngine.evaluateDexMethodFlags(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_METHOD_HAS_CODE":
+                            result = TestEngine.evaluateDexMethodHasCode(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
+                        case "DEX_METHOD_SIGNATURE":
+                            result = TestEngine.evaluateDexMethodSignature(basicTest,
+                                    getCachedDexContainer(basicTest, bundle));
+                            break;
                         default:
                             result = TestEngine.executeBasicTest(context, basicTest);
                             break;
                     }
+                } catch(OutOfMemoryError e) {
+                    Log.e(Constants.LOG_TAG,"OutOfMemoryError in performTest: " + e.getMessage());
+                    service.handleFatalErrorViaCallback(service.getResources().getString(R.string.patchanalysis_error_out_of_memory));
                 } catch (Exception e) {
                     exception = e.getMessage();
                 }
@@ -440,6 +538,12 @@ public class BasicTestCache {
                 Log.e(Constants.LOG_TAG, "working thread:"+e.getMessage());
                 return null;
             }
+        }
+    }
+
+    public class NoTestsAvailableException extends RuntimeException {
+        public NoTestsAvailableException(String errorMessage) {
+            super(errorMessage);
         }
     }
 }

@@ -38,9 +38,19 @@ public class DBHelper {
         PADatabaseManager.initializeInstance(new PASQLiteOpenHelper(context));
         paDatabaseManager = PADatabaseManager.getInstance();
         if(db == null || !db.isOpen())
-            db = paDatabaseManager.openDatabase();
+            openDB(false);
     }
 
+    public void openDB(Boolean readOnly) {
+        if (readOnly) {
+            db = paDatabaseManager.openDatabaseReadOnly();
+        } else {
+            db = paDatabaseManager.openDatabase();
+        }
+        db.enableWriteAheadLogging();
+        db.execSQL("PRAGMA synchronous = NORMAL");
+        db.execSQL("PRAGMA cache_size = 100000");
+    }
     public void closeDB(){
         if(paDatabaseManager != null)
             paDatabaseManager.closeDatabase();
@@ -61,7 +71,7 @@ public class DBHelper {
 
         try {
             if(db == null || !db.isOpen())
-                db = PADatabaseManager.getInstance().openDatabase();
+                openDB(false);
             //get all keys from basic test
             Iterator<String> keyIterator = basicTest.keys();
             Set<String> keys = new HashSet<String>();
@@ -106,7 +116,7 @@ public class DBHelper {
     public void addTestResultToDB(String uuid, Boolean result){
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
         ContentValues values = new ContentValues();
         //write to basictests table
@@ -138,7 +148,7 @@ public class DBHelper {
             return;
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
         ContentValues values = new ContentValues();
         //write to basictests table
@@ -163,7 +173,7 @@ public class DBHelper {
         //Log.d(Constants.LOG_TAG,"getNotPerformedTests called with limit: "+limit);
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
 
         Vector<JSONObject> results = new Vector<>();
@@ -212,7 +222,7 @@ public class DBHelper {
         //Log.d(Constants.LOG_TAG,"getNotPerformedTests called with limit: "+limit);
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
 
         Vector<JSONObject> results = new Vector<>();
@@ -225,7 +235,7 @@ public class DBHelper {
                 new String[]{"-1"},
                 null,
                 null,
-                "filename, testType DESC",
+                "filename, dexPath, testType DESC",
                 ""+limit
         );
 
@@ -262,7 +272,7 @@ public class DBHelper {
     public Boolean getTestResult(String uuid){
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
         //basic test table info
         Cursor cursor = db.query(
@@ -287,7 +297,7 @@ public class DBHelper {
     public Vector<String> getAllBasicTestsUUIDs() throws JSONException {
         //make sure DB access is ready (read only)
         if (db == null || !db.isOpen()) {
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
 
         //basic test table info
@@ -319,7 +329,7 @@ public class DBHelper {
     public Vector<JSONObject> getAllBasicTests() throws JSONException, UnsupportedEncodingException {
         //make sure DB access is ready (read only)
         if (db == null || !db.isOpen()) {
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
 
         //basic test table info
@@ -366,7 +376,7 @@ public class DBHelper {
         }
         //make sure DB access is ready (read only)
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
         Cursor cursor = null;
         try {
@@ -416,7 +426,7 @@ public class DBHelper {
     public void resetAllBasicTests() {
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
         ContentValues values = new ContentValues();
         //write to basictests table
@@ -442,7 +452,7 @@ public class DBHelper {
     public int getNumberOfTotalNotPerformedTests() {
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabaseReadOnly();
+            openDB(true);
         }
         Cursor cursor = db.query(
                 "basictests",
@@ -466,7 +476,7 @@ public class DBHelper {
             return;
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
         //Log.d(Constants.LOG_TAG,"Marking basicTestChunkURL: "+basicTestChunkURL+" as downloaded and parsed successfully in DB");
         ContentValues values = new ContentValues();
@@ -479,7 +489,7 @@ public class DBHelper {
     public boolean wasBasicTestChunkSuccessful(String basicTestChunkURL) {
         //make sure DB access is ready
         if(db == null || !db.isOpen()){
-            db = PADatabaseManager.getInstance().openDatabase();
+            openDB(false);
         }
         Cursor cursor = db.query(
                 "basictest_chunks",
@@ -499,5 +509,9 @@ public class DBHelper {
         }
         cursor.close();
         return false;
+    }
+
+    public SQLiteDatabase getDBInstance() {
+        return this.db;
     }
 }

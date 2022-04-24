@@ -43,13 +43,13 @@
     <!-- Error messages -->
     <string name="patchanalysis_sticky_error_message_start">Last analysis failed due to:</string>
     <string name="patchanalysis_error_out_of_memory">Not enough memory to finish analysis. Please try closing a few applications before re-running the analysis.</string>
+    <string name="patchanalysis_no_tests_available">There are currently no tests available for your device. We are continuously working on adding more, hence you should try again soon.</string>
     <string name="patchanalysis_error_creating_result_overview">A problem occurred while creating the result overview!</string>
     <string name="patchanalysis_dialog_no_internet_connection_title">No network connection</string>
     <string name="patchanalysis_dialog_no_internet_connection_text">Could not establish connection to backend server. \nPlease make sure your device is connected to the internet and try again later.</string>
     <string name="patchanalysis_too_old_android_api_level">Your current Android OS version is too old.\nWe support Android from 5.0.</string>
     <string name="patchanalysis_too_old_android_api_level_result_chart">Android version not supported</string>
     <string name="patchanalysis_invalid_basic_test">The installed version of SnoopSnitch is not capable of performing the most recent tests. Please update to the latest available version.</string>
-
 
     <string name="patchanalysis_new_version_available_heading">New version available</string>
     <string name="patchanalysis_new_version_available_instructions">This app version is out of date. Please update to the latest version of SnoopSnitch.</string>
@@ -63,11 +63,11 @@
 
     <!-- Status messages -->
     <string name="pa_status_start_fetching_test_chunks">Fetching testsuite details...</string>
-    <string name="pa_status_finished_parsing_testsuite">Finished parsing testsuite</string>
+    <string name="pa_status_finished_parsing_testsuite">Finished parsing testsuite. Preparing test execution...</string>
     <string name="pa_status_downloading_testsuite">Downloading testsuite from server...</string>
     <string name="pa_status_finished_downloading_testsuite">Finished downloading testsuite</string>
     <string name="pa_status_collecting_device_info">Collecting device details...</string>
-    <string name="pa_status_finished_collecting_device_info">Finished collecting device details</string>
+    <string name="pa_status_finished_collecting_device_info">Finished collecting device details. Parsing testsuite...</string>
     <string name="pa_status_finished_performing_basic_tests">Test execution complete</string>
     <string name="pa_status_performing_basic_tests">"Executing tests...</string>
     <string name="pa_notification_channel_title">Patch Analysis</string>

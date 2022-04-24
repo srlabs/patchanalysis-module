@@ -394,6 +394,9 @@ public class PatchanalysisService extends Service {
                 } catch(OutOfMemoryError e) {
                     Log.e(Constants.LOG_TAG,"OutOfMemoryError in pendingTestResultsUploadRunnable: "+e.getMessage());
                     handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_error_out_of_memory));
+                } catch (BasicTestCache.NoTestsAvailableException e) {
+                    Log.e(Constants.LOG_TAG,"There are no basic tests in the DB: "+e.getMessage());
+                    handleFatalErrorViaCallback(PatchanalysisService.this.getResources().getString(R.string.patchanalysis_no_tests_available));
                 }
             }
         };
@@ -570,7 +573,7 @@ public class PatchanalysisService extends Service {
     }
 
     // Calling this will cause the service to be killed
-    private void handleFatalErrorViaCallback(final String stickyErrorMessage){
+    public void handleFatalErrorViaCallback(final String stickyErrorMessage){
         SharedPrefsHelper.saveStickyErrorMessage(stickyErrorMessage, PatchanalysisService.this);
         notificationHelper.showAnalysisFailedNotification();
         handler.post(new Runnable(){
