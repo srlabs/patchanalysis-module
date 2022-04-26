@@ -14,7 +14,7 @@ import java.io.InputStream;
 public class PASQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String TAG = "PASQLiteOpenHelper";
     private static final String DATABASE_NAME = "pa.db";
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 14;
     private static final boolean verbose = false;
     private Context context;
 
