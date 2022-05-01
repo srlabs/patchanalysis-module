@@ -758,7 +758,11 @@ public class PatchanalysisMainActivity extends FragmentActivity {
         StringBuilder information = new StringBuilder();
         information.append("</br><b><u>"+this.getResources().getString(R.string.patchanalysis_dialog_note_title)+"</u></b></br>");
         information.append(message+"</br>");
-        information.append("Android OS version: "+ Build.VERSION.RELEASE);
+        if (Build.VERSION.SDK_INT == 32) {
+            information.append("Android OS version: 12L");
+        } else {
+            information.append("Android OS version: "+ Build.VERSION.RELEASE);
+        }
         return information.toString();
     }
 
